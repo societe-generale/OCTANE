@@ -1,0 +1,57 @@
+---
+
+- name: Add granted domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "granted_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - init
+    - revokedomain
+    - grantdomain
+    - up_lb
+
+- name: Add revoked domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "revoked_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - revokedomain
+    - up_lb
+
+- import_tasks: init/iptables.yml
+  tags:
+    - init
+    - up_lb
+
+- import_tasks: init/selinux.yml
+  tags:
+    - init
+    - up_lb
+
+- import_tasks: init/filebeat.yml
+  tags:
+    - init
+    - up_lb
+
+- import_tasks: init/rsyslog.yml
+  tags:
+    - init
+    - up_lb
+
+- import_tasks: grant/telegraf.yml
+  tags:
+    - init
+    - grantdomain
+    - revokedomain
+    - up_lb
+
+- import_tasks: grant/haproxy.yml
+  tags:
+    - init
+    - grantdomain
+    - revokedomain
+    - up_lb

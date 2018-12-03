@@ -1,0 +1,111 @@
+---
+
+- name: Add granted domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "granted_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - init
+    - grantdomain
+    - mid_waf
+
+- name: Add revoked domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "revoked_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - revokedomain
+    - mid_waf
+
+- name: Add granted VPN streams
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "granted_vpn_streams_{{stack}}.yml"
+      skip: true
+  tags: [always]
+
+- import_tasks: init/softwares.yml
+  tags:
+    - init
+    - mid_waf
+
+- import_tasks: init/selinux.yml
+  tags:
+    - init
+    - mid_waf
+
+- import_tasks: init/system.yml
+  tags:
+    - init
+    - mid_waf
+
+- import_tasks: init/modsecurity.yml
+  tags:
+    - init
+    - mid_waf
+
+- import_tasks: init/clam.yml
+  tags:
+    - init
+    - mid_waf
+
+- import_tasks: grant/filebeat.yml
+  tags:
+    - init
+    - grantdomain
+    - revokedomain
+    - mid_waf
+
+- import_tasks: grant/telegraf.yml
+  tags:
+    - init
+    - grantdomain
+    - revokedomain
+    - mid_waf
+
+- import_tasks: grant/iptables.yml
+  tags:
+    - init
+    - grantdomain
+    - revokedomain
+    - mid_waf
+
+- import_tasks: grant/ssl.yml
+  tags:
+    - grantdomain
+    - mid_waf
+
+- import_tasks: grant/nginx.yml
+  tags:
+    - grantdomain
+    - mid_waf
+
+- import_tasks: grant/havp.yml
+  tags:
+    - grantdomain
+    - mid_waf
+
+- import_tasks: grant/suricata.yml
+  tags:
+    - grantdomain
+    - mid_waf
+
+- import_tasks: revoke/nginx.yml
+  tags:
+    - revokedomain
+    - mid_waf
+
+- import_tasks: revoke/havp.yml
+  tags:
+    - revokedomain
+    - mid_waf
+
+- import_tasks: revoke/suricata.yml
+  tags:
+    - revokedomain
+    - mid_waf

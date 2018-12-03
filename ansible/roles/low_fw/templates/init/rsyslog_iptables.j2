@@ -1,0 +1,5 @@
+$ModLoad imudp
+$UDPServerAddress 127.0.0.1
+$UDPServerRun 514
+
+:msg, contains, "IN " -/var/log/iptables.log

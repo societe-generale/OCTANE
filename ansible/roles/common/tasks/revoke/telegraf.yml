@@ -1,0 +1,15 @@
+---
+
+- name:  Install telegraf config file for each EC2 instance
+  template:
+    src: "telegraf_{{ ec2_stage | default('all') }}_{{ ec2_fonction | default('all') }}.j2"
+    dest: "/etc/telegraf/telegraf.conf"
+    owner: root
+    backup: yes
+    group: root
+    mode: 0644
+  with_items: 
+    - "{{ granted_domains }}"
+  when:
+    - granted_domains is defined
+  notify: Restart telegraf daemon

@@ -1,0 +1,24 @@
+---
+
+- name:  Create ssl certificate directory
+  file:
+      path: "{{ v_certificates_path }}"
+      state: directory
+      mode: 0755
+
+#Ansible best-practice : use template for complex iptables rules
+- name:  Define iptables rules for EC2 instances
+  template:
+    src: "iptables_{{ ec2_stage }}_{{ ec2_fonction }}.j2"
+    dest: "/etc/sysconfig/iptables"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+  with_items: 
+    - "{{ granted_domains }}"
+    - "{{ granted_vpn_streams }}"
+  when:
+    - granted_domains is defined
+  notify: Reload iptables daemon

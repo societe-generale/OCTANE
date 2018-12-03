@@ -1,0 +1,14 @@
+[Unit]
+Description=SURICATA {{ item.domain }} service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart={{ v_suricata_root_directory }}/{{ item.domain }}/bin/suricata.{{ item.domain }} -c {{ v_suricata_root_directory }}/{{ item.domain }}/etc/suricata.yaml -q {{ item.http2_listening_port }}
+ExecStop=/bin/pkill suricata.{{ item.domain }}
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

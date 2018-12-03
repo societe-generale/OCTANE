@@ -1,0 +1,10 @@
+node.name: "{{ v_metrology_influxdb_db }}"
+path.data: /var/lib/logstash
+path.config: "/etc/logstash/conf.d/*/*"
+config.reload.automatic: true
+config.reload.interval: 60
+config.debug: false
+pipeline.unsafe_shutdown: true
+log.level: error
+path.logs: "{{ v_log_path }}/logstash"
+

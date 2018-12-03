@@ -1,0 +1,20 @@
+
+[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+dir = {{ openvpn_key_dir }}
+certs = $dir/
+new_certs_dir = $dir/
+database = $dir/index.txt
+crlnumber = $dir/crl_number
+certificate = $dir/{{ openvpn_ca_crt_name }}
+private_key = $dir/{{ openvpn_ca_key_name }}
+default_days = {{ openvpn_ca_validity_days }}
+default_crl_days = {{ openvpn_crl_validity_days }}
+default_md = sha256
+preserve = no
+
+[ crl_ext ]
+authorityKeyIdentifier=keyid:always,issuer:always
+

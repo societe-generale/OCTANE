@@ -1,0 +1,10 @@
+---
+
+- name:  Create nginx log directories for each domain
+  file:
+      path: "{{ v_log_path }}/nginx/{{ item.domain }}"
+      state: directory
+      mode: 0755
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Reload nginx daemon

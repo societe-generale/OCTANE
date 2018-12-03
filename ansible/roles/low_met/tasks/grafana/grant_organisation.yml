@@ -1,0 +1,23 @@
+---
+
+- import_tasks: create_accountable_user.yml
+
+- import_tasks: create_organisations.yml
+
+- import_tasks: set_organisations_users.yml
+
+- import_tasks: delete_email_organisations.yml
+
+- import_tasks: switch_user_to_organisation.yml
+
+- import_tasks: retrieve_all_organisations.yml
+
+- import_tasks: populate_organisations_influxdb.yml
+
+- import_tasks: retrieve_certificate.yml
+
+- import_tasks: create_dashboards_directories.yml
+
+- import_tasks: set_datasources.yml
+
+- import_tasks: set_dashboards.yml

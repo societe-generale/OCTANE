@@ -1,0 +1,39 @@
+---
+
+- name:  Remove httpd software 
+  package:
+    name: httpd
+    state: absent
+  notify: Disable httpd daemon
+
+- name:  Remove firewalld software 
+  package:
+    name: firewalld
+    state: absent
+   notify: Disable firewalld daemon
+
+- name:  Install epel-release
+  package:
+    name: "epel-release"
+    state: present
+
+- name:  Install vim 
+  package:
+    name: "vim"
+    state: present
+
+- name:  Install common softwares
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - iptables-services
+    - filebeat
+    - haproxy
+    - telegraf
+
+- name:  Create ssl certificate directory
+  file:
+    path: "{{ v_certificates_path }}"
+    state: directory
+    mode: 0755

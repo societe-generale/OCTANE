@@ -1,0 +1,46 @@
+output {
+  if [database] == "{{ item[0].domain | replace('.', '_') }}" {
+    if [fields][log_type] == "havp_access" {
+       influxdb {
+          host => "{{ v_metrology_influxdb_host }}"
+          user => "{{ v_metrology_influxdb_user }}"
+          password => "{{ v_metrology_influxdb_password }}"
+          port => {{ v_metrology_influxdb_port }}
+          data_points => {
+             "domain" => "%{[domain]}"
+             "header_size" => "%{[header_size]}"
+             "port" => "%{[port]}"
+             "virus" => "%{[virus]}"
+             "body_size" => "%{[body_size]}"
+             "method" => "%{[method]}"
+             "url" => "%{[url]}"
+             "offset" => "%{[offset]}"
+             "status" => "%{[status]}"
+             "az" => "%{[az]}"
+             "ciap" => "%{[ciap]}"
+             "bl" => "%{[bl]}"
+             "env" => "%{[env]}"
+             "fonction" => "%{[fonction]}"
+             "region" => "%{[region]}"
+             "stage" => "%{[stage]}"
+             "hostname" => "%{[hostname]}"
+             "genre" => "%{[genre]}"
+          }
+          coerce_values => {
+             "header_size" => "integer"
+             "port" => "integer"
+             "body_size" => "integer"
+             "offset" => "integer"
+             "status" => "integer"
+          }
+          measurement => "havp_access"
+          use_event_fields_for_data_points => false
+          allow_time_override => true
+          time_precision => "ms"
+          send_as_tags => [ "domain", "method", "status", "virus", "az", "ciap", "env", "fonction", "region", "stage", "genre" ]
+          db => "{{ item[0].domain | replace('.', '_') }}"
+          ssl => true
+       }
+    }
+  }
+}

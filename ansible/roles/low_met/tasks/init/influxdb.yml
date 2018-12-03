@@ -1,0 +1,42 @@
+---
+
+- name:  Install influxdb config file
+  template:
+    src: "influxdb/influxdb_conf.j2"
+    dest: "/etc/influxdb/influxdb.conf"
+    owner: root
+    backup: yes
+    group: root
+    mode: 0644
+  notify: Enable influxdb systemd service
+
+- name: Create admin user
+  uri:
+    url: "https://localhost:8086/query?q=CREATE%20USER%20%22{{ v_influxdb_admin }}%22%20WITH%20PASSWORD%20%27{{ v_influxdb_admin_password }}%27"
+    method: POST
+    body: ""
+    force_basic_auth: no
+    status_code: 200
+    timeout: 5
+    validate_certs: no
+
+- name: Create logstash user
+  uri:
+    url: "https://localhost:8086/query?q=CREATE%20USER%20%22{{ v_influxdb_logstash_writer }}%22%20WITH%20PASSWORD%20%27{{ v_influxdb_logstash_writer_password }}%27"
+    method: POST
+    body: ""
+    force_basic_auth: no
+    status_code: 200
+    timeout: 5
+    validate_certs: no
+
+- name: Create grafana user
+  uri:
+    url: "https://localhost:8086/query?q=CREATE%20USER%20%22{{ v_influxdb_grafana_reader }}%22%20WITH%20PASSWORD%20%27{{ v_influxdb_grafana_reader_password }}%27"
+    method: POST
+    body: ""
+    force_basic_auth: no
+    status_code: 200
+    timeout: 5
+    validate_certs: no
+

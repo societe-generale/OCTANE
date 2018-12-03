@@ -1,0 +1,8 @@
+---
+
+- name: Remove specific sudo for telegraf on "{{ ec2_stage }}"_"{{ ec2_fonction }}"
+  file:
+    path: "/etc/sudoers.d/telegraf_{{ item.domain }}"
+    state: absent
+    mode: 0440
+  with_items: "{{ revoked_domains }}"

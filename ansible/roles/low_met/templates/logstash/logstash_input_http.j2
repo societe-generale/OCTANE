@@ -1,0 +1,12 @@
+# Telegraf input through http input feature
+  http {
+    host => "{{ ec2_low_met_private_dns_names }}"
+    port => {{ v_metrology_influxdb_port }}
+    ssl => true
+    ssl_certificate => "{{ v_certificates_path}}/logstash.crt"
+    ssl_key => "{{ v_certificates_path}}/logstash.key"
+    codec => "json"
+    add_field => {
+        "tag" => "telegraf_json"
+    }
+  }

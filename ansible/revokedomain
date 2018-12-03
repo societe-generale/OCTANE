@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# 20062018: Eric BOUTEVILLE
+
+
+usage()
+{
+  echo "Usage : $0 (-c) -s <stack> (-f <full path to result file>) (-p <full path to log>)"
+  echo "CLI API for OCTANE"
+  echo "Program name = ansible tag"
+  echo "./init -s octanetst"
+  echo "Then the ansible playbook will use all task with init tag"
+  echo "If -c option set, then an ansible check will be performed"
+  echo "If -f option set, then ansible result will be written to <full path to result file>"
+  echo "Default: /tmp/${0##*/}-<stack>.XXXXXX.res"
+  echo "If -p option set, then ansible output will be written to <full path to log file>"
+  echo "Default: /tmp/${0##*/}-<stack>.XXXXXX.log"
+  echo "   Ex : $0 -s octane -f /tmp/${0##*/}-<stack>"
+  echo "List of functions:"
+  echo " - init"
+  echo " - common"
+  echo " - up_lb"
+  echo " - mid_waf"
+  echo " - mid_vpn"
+  echo " - low_fw"
+  echo " - low_met"
+  echo " - revokedomain"
+  echo " - grantdomain"
+  echo " - grantvpnclient"
+  echo " - revokevpnclient"
+}
+
+while getopts "cp:f:s:" o; do
+    case "${o}" in
+        c)
+            c=" --check "
+            ;;
+        p)
+            p=${OPTARG}
+            ;;
+        s)
+            s=${OPTARG}
+            ;;
+        f)
+            f=${OPTARG}
+            ;;
+        *)
+            usage
+            exit 2
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ -z "${s}" ] ; then
+    usage
+    exit 2;
+fi
+
+# If result path defined, then check it
+if ! [ -z "$f" ]; then
+   if ! [[ "$f" =~ ^/[-_A-Za-z0-9]+(/[-_A-Za-z0-9]*)*$ ]]; then
+       echo "Error: $f is not a path"
+       usage
+       exit 2;
+   fi
+   f="$p/${0##*/}-$s.res"
+else
+   f=$(mktemp /tmp/${0##*/}-$s.XXXXXX.res)
+fi
+
+# If log path defined, then check it
+if ! [ -z "$p" ]; then
+   if ! [[ "$p" =~ ^/[-_A-Za-z0-9]+(/[-_A-Za-z0-9]*)*$ ]]; then
+       echo "Error: $p is not a path"
+       usage
+       exit 2;
+   fi
+   p="$p/${0##*/}-$s.log"
+else
+   p=$(mktemp /tmp/${0##*/}-$s.XXXXXX.log)
+fi
+
+source ./bin/activate
+fonction="${0##*/}"
+ansible-playbook $c main.yml -e stack=$s  --tags="$fonction"  >> "$p"
+
+#rm -f "$p"
+#rm -f "$f"
+
+exit 0;

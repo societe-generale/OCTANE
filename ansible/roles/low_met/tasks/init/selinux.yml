@@ -1,0 +1,10 @@
+---
+
+- name: Configure SELinux for "{{ ec2_stage }}" and "{{ ec2_fonction }}"
+  seboolean:
+    name: "{{ item }}"
+    state: on
+    persistent: yes
+  with_items:
+     - nis_enabled
+     - haproxy_connect_any

@@ -1,0 +1,39 @@
+---
+
+- name: Create root directory for check vhost
+  file:
+    path: "/var/www/{{ granted_domains[0].domain }}"
+    state: directory
+    mode: 0755
+  notify: Restart httpd daemon
+
+- name: Create index file for check vhost
+  copy:
+    src: "check_index.html"
+    dest: "/var/www/{{ granted_domains[0].domain }}/index.html"
+    backup: no
+    mode: 0755
+  notify: Restart httpd daemon
+
+- name:  Set  configuration file for httpd
+  template:
+    src: "httpd.conf.j2"
+    dest: "/etc/httpd/conf/httpd.conf"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+  notify: Restart httpd daemon
+
+- name:  Set  configuration file for check instance
+  template:
+    src: "vhost_check.j2"
+    dest: "/etc/httpd/conf.d/check.conf"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+  notify: Restart httpd daemon
+

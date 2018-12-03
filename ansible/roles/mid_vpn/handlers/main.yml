@@ -1,0 +1,22 @@
+---
+
+- name: restart openvpn
+  service:
+    name: "{{openvpn_service_name}}"
+    state: restarted
+    no_block: yes
+  ignore_errors: true
+
+- name: Reload iptables daemon
+  service:
+    name: iptables
+    state: reloaded
+    no_block: yes
+  ignore_errors: true
+
+- name: Restart iptables daemon
+  service:
+    name: iptables
+    state: restarted
+    no_block: yes
+  ignore_errors: true

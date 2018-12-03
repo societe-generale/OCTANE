@@ -1,0 +1,40 @@
+output {
+  if [database] == "{{ item[0].domain | replace('.', '_') }}" {
+    if ([fields][log_type] == "vpn_connect") or ([fields][log_type] == "vpn_disconnect") {
+      influxdb {
+        host => "{{ v_metrology_influxdb_host }}"
+        user => "{{ v_metrology_influxdb_user }}"
+        password => "{{ v_metrology_influxdb_password }}"
+        port => {{ v_metrology_influxdb_port }}
+        data_points => {
+          "timestamp" => "%{[timestamp]}"
+          "source_ip" => "%{[source_ip]}"
+          "source_port" => "%{[source_port]}"
+          "name" => "%{[name]}"
+          "connect" => "%{[connect]}"
+          "domain" => "%{[domain]}"
+          "az" => "%{[az]}"
+          "ciap" => "%{[ciap]}"
+          "bl" => "%{[bl]}"
+          "env" => "%{[env]}"
+          "fonction" => "%{[fonction]}"
+          "region" => "%{[region]}"
+          "stage" => "%{[stage]}"
+          "hostname" => "%{[hostname]}"
+          "genre" => "%{[genre]}"
+        }
+        coerce_values => {
+          "source_port" => "integer"
+          "connect" => "integer"
+        }
+        measurement => "vpn_access"
+        use_event_fields_for_data_points => false
+        allow_time_override => true
+        time_precision => "s"
+        send_as_tags => [ "domain", "name", "az", "ciap", "env", "fonction", "region", "stage", "genre" ]
+        db => "{{ item[0].domain | replace('.', '_') }}"
+        ssl => true
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+# Suricata configuration
+  if [fields][log_type] == "suricata" {
+      json {
+        source => "message"
+      }
+
+     date {
+          match => [ "event_timestamp" , "ISO8601" ]
+          target => "@timestamp"
+          timezone => "Europe/Paris"
+          locale => "en"
+     }
+
+     date {
+          match => [ "timestamp" , "ISO8601" ]
+          target => "@timestamp"
+          timezone => "Europe/Paris"
+          locale => "en"
+     }
+      mutate {
+        copy => { "[fields][domain]" => "database" }
+      }
+
+      mutate {
+        gsub => [
+              "database", "\.", "_"
+        ]
+      }
+   }

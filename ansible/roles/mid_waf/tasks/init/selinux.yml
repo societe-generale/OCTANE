@@ -1,0 +1,40 @@
+---
+
+- name: Configure SELinux for "{{ ec2_stage }}" and "{{ ec2_fonction }}"
+  seboolean:
+    name: "{{ item }}"
+    state: on
+    persistent: yes
+  with_items:
+     - clamd_use_jit
+     - httpd_execmem
+     - httpd_can_network_connect
+     - httpd_can_network_relay
+     - nis_enabled
+     - antivirus_can_scan_system
+
+- name: Install tools
+  package:
+    name: policycoreutils-python
+    state: present
+
+- name: Remove SELinux policy package
+  command: semodule -r httpd_t
+  failed_when: false
+
+- name: Copy SELinux type enforcement file
+  copy: src=httpd_t.te
+        dest=/tmp/
+
+- name: Compile SELinux module file
+  command: checkmodule -M -m -o /tmp/httpd_t.mod /tmp/httpd_t.te
+
+- name: Build SELinux policy package
+  command: semodule_package -o /tmp/httpd_t.pp -m /tmp/httpd_t.mod
+
+- name: Load SELinux policy package
+  command: semodule -i /tmp/httpd_t.pp
+
+- name: Remove temporary files
+  file: path=/tmp/httpd_t.*
+        state=absent

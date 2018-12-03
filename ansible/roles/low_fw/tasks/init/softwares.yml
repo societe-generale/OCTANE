@@ -1,0 +1,10 @@
+---
+
+- name:  Install nginx softwares
+  package:
+   name: "{{ item }}"
+   state: present
+  with_items:
+    - nginx
+    - nginx-all-modules
+    - nginx-mod-stream

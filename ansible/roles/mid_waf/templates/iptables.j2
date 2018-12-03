@@ -1,0 +1,24 @@
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [214:43782]
+{% for domain in granted_domains %}
+-A INPUT -p tcp -m tcp --sport {{ domain.http2_listening_port }} -j NFQUEUE --queue-num {{ domain.http2_listening_port }} --queue-bypass
+{% endfor %}
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -p tcp -m tcp -m state --state NEW --dport 22 -j ACCEPT
+-A INPUT -p tcp -m tcp -m state --state NEW --dport {{ v_healthcheck_port }} -m comment --comment "Healthcheck" -j ACCEPT
+{% for domain in granted_domains %}
+{% if domain.http| bool %}
+-A INPUT -p tcp -m tcp -m state --state NEW --dport {{ domain.http_listening_port }} -j ACCEPT
+{% endif %}
+-A INPUT -p tcp -m tcp -m state --state NEW --dport {{ domain.https_listening_port }} -j ACCEPT
+{% endfor %}
+-A INPUT -i lo -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+{% for domain in granted_domains %}
+-A OUTPUT -p tcp -m tcp --dport {{ domain.http2_listening_port }} -j NFQUEUE --queue-num {{ domain.http2_listening_port }} --queue-bypass
+{% endfor %}
+COMMIT

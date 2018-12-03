@@ -1,0 +1,12 @@
+---
+
+- name:  Remove domain configuration files from nginx directory
+  file:
+    path: "/etc/nginx/conf.d/{{item.domain}}.conf"
+    state: absent
+  when:
+    - revoked_domains is defined
+    - ( revoked_domains )
+  with_items: 
+    - "{{ revoked_domains }}"
+  notify: Reload nginx daemon

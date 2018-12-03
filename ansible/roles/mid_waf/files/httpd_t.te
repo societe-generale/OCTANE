@@ -1,0 +1,10 @@
+module httpd_t 1.0;
+
+require {
+        type unconfined_t;
+        type httpd_t;
+        class shm { associate unix_read unix_write };
+}
+
+#============= httpd_t ==============
+allow httpd_t unconfined_t:shm associate;

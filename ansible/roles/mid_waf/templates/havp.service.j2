@@ -1,0 +1,17 @@
+[Unit]
+Description=HAVP {{ item.domain }} service
+After = clamdscan.service
+Requires = clamdscan.service
+
+[Service]
+Type=simple
+User=root
+ExecStart={{ v_havp_root_directory }}/{{ item.domain }}/sbin/havp.{{ item.domain }} --conf-file=/opt/havp/{{ item.domain }}/etc/havp.config
+ExecStop=/bin/pkill havp.{{ item.domain }}
+KillMode=process
+Restart=always
+RestartSec=30
+PIDFile=/var/run/havp_{{ item.domain }}.pid
+
+[Install]
+WantedBy=multi-user.target

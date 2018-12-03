@@ -1,0 +1,42 @@
+#
+# This is the configuration file for HAVP
+#
+USER clamscan
+GROUP clamscan
+DAEMON false
+PIDFILE /var/run/havp_{{ item.domain }}.pid
+SERVERNUMBER 10
+MAXSERVERS 20
+ACCESSLOG {{ v_log_path }}/havp/{{ item.domain }}/{{ item.domain }}_access.log
+ERRORLOG {{ v_log_path }}/havp/{{ item.domain }}/{{ item.domain }}_error.log
+LOG_OKS true
+LOGLEVEL 0
+SCANTEMPFILE {{ v_clamd_temporary_directory }}/{{ item.domain }}_havp-XXXXXX
+TEMPDIR {{ v_clamd_temporary_directory }}/
+TRANSPARENT true
+PARENTPROXY {{ item.http2_listening_ip }}
+PARENTPORT {{ item.http2_listening_port }}
+FORWARDED_IP true
+X_FORWARDED_FOR true
+PORT {{ item.havp_listening_port }}
+BIND_ADDRESS {{ item.havp_listening_ip }}
+TEMPLATEPATH {{ v_havp_root_directory }}/{{ item.domain }}/etc/templates/en
+WHITELIST {{ v_havp_root_directory }}/{{ item.domain }}/etc/whitelist
+BLACKLIST {{ v_havp_root_directory }}/{{ item.domain }}/etc/blacklist
+FAILSCANERROR false
+SCANNERTIMEOUT 1
+RANGE true
+PRELOADZIPHEADER true
+ENABLECLAMLIB false
+ENABLECLAMD true
+CLAMDSERVER {{ v_clamd_listening_address }}
+CLAMDPORT {{ v_clamd_listening_port }}
+ENABLEFPROT false
+ENABLEAVG false
+ENABLEAVESERVER false
+ENABLESOPHIE false
+ENABLETROPHIE false
+ENABLENOD32 false
+ENABLEAVAST false
+ENABLEARCAVIR false
+ENABLEDRWEB false

@@ -1,0 +1,34 @@
+# Nginx configuration
+  if [fields][log_type] == "nginx_access" {
+     grok {
+           match => [ "message" , "%{IPORHOST:clientip} - (?:%{DATA:user_name}|-) \[%{HTTPDATE:timestamp}\] \"%{WORD:method} %{DATA:url} HTTP/%{NUMBER:http_version}\" %{NUMBER:http_response} %{NUMBER:body_sent_bytes} \"%{DATA:referrer}\" \"%{DATA:agent}\" \"(?:%{DATA:x_forwarded_for}|-)\" \"%{IPORHOST:domain}\" \"%{NUMBER:listening_port}\" \"(?:%{DATA:proxy_port}|-)\""]
+           add_field => [ "az", "%{[fields][az]}" ]
+           add_field => [ "ciap", "%{[fields][ciap]}" ]
+           add_field => [ "bl", "%{[fields][bl]}" ]
+           add_field => [ "env", "%{[fields][env]}" ]
+           add_field => [ "fonction", "%{[fields][fonction]}" ]
+           add_field => [ "region", "%{[fields][region]}" ]
+           add_field => [ "stage", "%{[fields][stage]}" ]
+           add_field => [ "hostname", "%{[fields][hostname]}" ]
+           add_field => [ "genre", "%{[fields][genre]}" ]
+     }
+
+     date {
+          match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
+          target => "@timestamp"
+     }
+
+      mutate {
+        copy => { "[fields][domain]" => "database" }
+      }
+
+      mutate {
+        gsub => [
+              "database", "\.", "_"
+        ]
+      }
+
+     useragent {
+          source => "agent"
+     }
+   }

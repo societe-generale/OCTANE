@@ -1,0 +1,46 @@
+---
+
+v_certificates_path: "/etc/ssl"
+v_clamd_temporary_directory: "/var/run/clamd.scan"
+v_clamd_listening_port: 1111
+v_clamd_listening_address: "127.0.0.1"
+v_havp_root_directory: "/opt/havp"
+v_suricata_root_directory: "/opt/suricata"
+v_external_listening_address: "127.0.0.1"
+v_suricata_listening_address: "127.0.0.2"
+v_region: "eu-west-1"
+v_clb_up_mid:  "CLBUPMID"
+v_clb_up_vpn:  "CLBUPVPN"
+v_clb_mid_low: "CLBMIDLO"
+v_sg_up: "SGUP"
+v_sg_mid: "SGMID"
+v_sg_vpn: "SGVPN"
+v_sg_up_vpn: "SGUPVPN"
+v_sg_low: "SGLOW"
+v_sg_met: "SGMET"
+v_haproxy_stats_listening_port: 2222
+v_haproxy_stats_listening_ip: "127.0.0.1"
+v_haproxy_stats_uri: "haproxy-stats"
+v_metrology_influxdb_host: "localhost"
+v_metrology_grafana_host: "localhost"
+v_metrology_grafana_port: 3000 # grafana default
+v_mingtree_port: 3333 
+v_metrology_influxdb_port: 8086 # influx default
+v_metrology_tcp_socket_port: 8094 # influx default
+v_metrology_influxdb_db: "influxdb_database"
+v_metrology_influxdb_user: "influxdb_user"
+v_metrology_influxdb_password: "influxdb_password"
+v_metrology_logstash_port: 5044 # logstash default
+v_healthcheck_port: 65000
+v_grafana_admin: "admin"
+v_grafana_admin_password: "new_password"
+v_influxdb_admin: "influxdb_admin"
+v_influxdb_admin_password: "influxdb_admin_new_password"
+v_influxdb_logstash_writer: "logstash_writer"
+v_influxdb_logstash_writer_password: "logstash_writer_password"
+v_influxdb_grafana_reader: "grafana_reader"
+v_influxdb_grafana_reader_password: "grafana_reader_password"
+v_vpn_port: 123
+v_log_path: "/var/log"
+v_http_proxy: "http://proxy:proxyport/"
+v_https_proxy: "http://proxy:proxyport/"

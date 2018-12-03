@@ -1,0 +1,53 @@
+output {
+  if [database] == "{{ item[0].domain | replace('.', '_') }}" {
+    if [fields][log_type] == "mod_security" {
+       influxdb {
+          host => "{{ v_metrology_influxdb_host }}"
+          user => "{{ v_metrology_influxdb_user }}"
+          password => "{{ v_metrology_influxdb_password }}"
+          port => {{ v_metrology_influxdb_port }}
+          data_points => {
+          "destIP" => "%{[destIp]}"
+          "sourcePort" => "%{[sourcePort]}"
+          "destPort" => "%{[destPort]}"
+          "incomingProtocol" => "%{[incomingProtocol]}"
+          "data_endpoint_localtime" => "%{[data][endpoint][localtime]}"
+          "data_endpoint_address" => "%{[data][endpoint][address]}"
+          "data_endpoint_port" => "%{[data][endpoint][port]}"
+          "data_endpoint_name" => "%{[data][endpoint][name]}"
+          "data_endpoint_http_code" => "%{[data][endpoint][http][code]}"
+          "data_endpoint_uri" => "%{[data][endpoint][uri]}"
+          "data_context_ip" => "%{[data][context][ip]}"
+          "data_context_http_acceptMedia" => "%{[data][context][http][acceptMedia]}"
+          "data_context_http_userAgent" => "%{[data][context][http][userAgent]}"
+          "data_context_http_method" => "%{[data][context][http][type]}"
+          "data_context_http_version" => "%{[data][context][http][version]}"
+          "data_detections_severity" => "%{[data][detections][0][severity]}"
+          "data_detections_description" => "%{[data][detections][0][description]}"
+          "data_detections_certainty" => "%{[data][detections][0][certainty]}"
+          "serverProtocol" => "%{[serverProtocol]}"
+          "httpMethod" => "%{[httpMethod]}"
+          "responseCode" => "%{[responseCode]}"
+          "requestheaders_accept" => "%{[requestHeaders][Accept]}"
+          "requestheaders_useragent" => "%{[requestHeaders][User_Agent]}"
+          "requestheaders_host" => "%{[requestHeaders][Host]}"
+          "uniqueId" => "%{uniqueId}"
+          }
+          coerce_values => {
+                "data_endpoint_port" => "integer"
+                "data_endpoint_http_code" => "integer"
+                "responseCode" => "integer"
+                "sourcePort" => "integer"
+                "destPort" => "integer"
+          }
+          send_as_tags => [ "data_endpoint_name", "requestheaders_host", "responseCode" ]
+          measurement => "mod_security"
+          use_event_fields_for_data_points => false
+          allow_time_override => true
+          time_precision => "ms"
+          db => "{{ item[0].domain | replace('.', '_') }}"
+          ssl => true
+       }
+    }
+  }
+}

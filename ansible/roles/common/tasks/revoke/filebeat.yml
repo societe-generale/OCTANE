@@ -1,0 +1,14 @@
+---
+
+- name:  Install filebeat config file for each EC2 instance
+  template:
+    src: "filebeat_{{ ec2_stage | default('all') }}_{{ ec2_fonction | default('all') }}.j2"
+    dest: "/etc/filebeat/filebeat.yml"
+    owner: root
+    backup: yes
+    group: root
+    mode: 0640
+  with_items: 
+     - "{{ granted_domains }}"
+     - "{{ ec2_low_met_private_dns_names }}"
+  notify: Restart filebeat daemon

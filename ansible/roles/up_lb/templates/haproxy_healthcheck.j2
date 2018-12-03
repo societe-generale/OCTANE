@@ -1,0 +1,5 @@
+listen healthcheck
+    bind *:{{ v_healthcheck_port }}
+    mode    http
+    monitor-uri /
+    errorfile 200 /etc/haproxy/200_http_ok

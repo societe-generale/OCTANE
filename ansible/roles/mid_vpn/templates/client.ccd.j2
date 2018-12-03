@@ -1,0 +1,4 @@
+ifconfig-push {{ openvpn_server_network }}{{item.ip}} {{openvpn_server_network}}{{  1 + (item.ip|int) }}
+{% if item.client_network %}
+iroute {{ item.client_network }} {{ item.client_netmask }}
+{% endif %}

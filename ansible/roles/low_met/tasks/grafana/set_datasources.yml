@@ -1,0 +1,14 @@
+---
+
+- name:  Install grafana datasource config file (1 per organization)
+  template:
+    src: "grafana/datasource_ciap_influxdb_yaml.j2"
+    dest: "/etc/grafana/provisioning/datasources/ciap-influxdb-{{ item.name }}-{{ item.id }}.yaml"
+    owner: root
+    backup: yes
+    group: grafana
+    mode: 0640
+  with_items:
+    - "{{ all_orgs_grafana.json }}"
+  when: item.name != "Main Org."
+  notify: Enable and restart grafana systemd service

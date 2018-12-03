@@ -1,0 +1,17 @@
+---
+
+- name: Search certificats on "{{ ec2_stage }}_{{ ec2_fonction }}"
+  stat:
+    path: "{{ v_certificates_path}}/{{ item.domain }}.key"
+  with_items:
+    - "{{ granted_domains }}"
+  register: mid_waf_key_certificats
+
+- name: Generate ssl certificates for "{{ ec2_stage }}_{{ ec2_fonction }}"
+  command: "openssl req -x509 -nodes -newkey rsa:2048 -keyout {{ v_certificates_path}}/{{ item.item.domain }}.key -out {{ v_certificates_path}}/{{ item.item.domain }}.crt -days 3650 -subj /CN={{ item.item.domain }}/"
+  args:
+    chdir: "{{ v_certificates_path }}"
+    creates: "certificates"
+  when:
+    - item.stat.exists == False
+  with_items: "{{ mid_waf_key_certificats.results }}"

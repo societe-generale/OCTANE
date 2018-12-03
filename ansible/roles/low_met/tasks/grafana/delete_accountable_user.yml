@@ -1,0 +1,17 @@
+---
+
+- name: Delete grafana accountable user
+  uri:
+    url: "https://localhost:3000/api/admin/users/{{ item.id }}"
+    method: DELETE
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    body: "{ }"
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+    timeout: 5
+    return_content: no
+    validate_certs: no
+  with_items:
+    - "{{ revoked_users }}"

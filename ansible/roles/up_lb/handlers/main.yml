@@ -1,0 +1,31 @@
+---
+
+- name: Reload haproxy daemon
+  systemd:
+     name: "haproxy"
+     enabled: yes
+     state: reloaded
+
+- name: Reload rsyslog daemon
+  systemd:
+     name: "rsyslog"
+     state: restarted
+
+- name: Reload iptables daemon
+  systemd:
+     name: iptables
+     enabled: yes
+     state: reloaded
+
+- name: Restart filebeat daemon
+  systemd:
+     name: filebeat
+     enabled: yes
+     state: restarted
+
+- name: Restart telegraf daemon
+  systemd:
+     name: telegraf
+     enabled: yes
+     state: restarted
+

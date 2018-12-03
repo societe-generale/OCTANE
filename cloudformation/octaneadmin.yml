@@ -1,0 +1,388 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Full admin cIAP OCTANE stack
+
+Parameters:
+  VPCName:
+    Default: OCTANE-ADMIN
+    Description: VPC name
+    Type: String
+  VPCUuid:
+    Default: TMP
+    Description: VPC uuid
+    Type: String
+  VPCCidr:
+    Default: 10.254.254.0/24
+    Description: VPC instances Cidr root
+    Type: String
+  adminCidr:
+    Default: x.y.w.z/00
+    Description: VPC where admin instances are
+    Type: String
+  browsingCidr:
+    Default: a.b.c.d/00
+    Description: VPC browsing
+    Type: String
+  admRouteTable:
+    Default: rtb-xxxxxxx
+    Description: RouteTable to allow admin to communicate with this VPC
+    Type: String
+  browsingRouteTable:
+    Default: rtb-yyyyyyy
+    Description: RouteTable to allow browsing to communicate with this VPC
+    Type: String
+  adminSecurityGroup:
+    Default: sg-xxxxxxx
+    Description: Security group for admin servers
+    Type: 'AWS::EC2::SecurityGroup::Id'
+  adminVpc:
+    Default: vpc-yyyyyyyy
+    Description: VPC where admin instances are
+    Type: 'AWS::EC2::VPC::Id'
+  browsingVpc:
+    Default: vpc-zzzzzzzz
+    Description: VPC for browsing
+    Type: 'AWS::EC2::VPC::Id'
+  sshPublicKey:
+    Default: SSH_KEY
+    Description: SSH pub key to connect with
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  zone53:
+    AllowedValues:
+      - octane-ciap.net.
+    Default: octane-ciap.net.
+    Type: String
+  bl:
+    AllowedValues:
+      - BL1
+      - BL2
+    Default: BL1
+    Type: String
+  env:
+    AllowedValues:
+      - DEV
+      - HML
+      - PRD
+      - TMP
+    Default: TMP
+    Type: String
+  S3Key:
+    Description: The name of the ZIP package
+    Type: String
+    Default: Lambda/amilookup.zip
+  ModuleName:
+    Description: The name of the JavaScript file
+    Type: String
+    Default: amilookup
+  S3Bucket:
+    Description: The name of the bucket that contains your packaged source
+    Type: String
+    Default: ciap-octane
+  AZ1:
+    Description: AZ 1
+    Type: String
+    Default: "eu-west-1a"
+  AZ2:
+    Description: AZ 2
+    Type: String
+    Default: "eu-west-1b"
+  instanceTypeADM:
+    Description: Admin instance type
+    Type: String
+    Default: t2.micro
+  IAMROLE:
+    Description: IAM Role
+    Type: String
+    Default: "role-name"
+
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Ref VPCCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Join
+            - _
+            - - VPC
+              - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+        - Key: infra
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+
+  NETAZ1SRV0:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref VPCCidr
+      AvailabilityZone: !Ref AZ1
+      Tags:
+        - Key: Name
+          Value: !Join
+            - _
+            - - NET
+              - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+              - AZ1
+              - SRV
+              - '0'
+        - Key: infra
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+
+  PrivateRTB:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join
+            - _
+            - - RTB
+              - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+              - PRIVATE
+        - Key: infra
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+
+  PrivaterouteVPCadmin:
+    Type: 'AWS::EC2::Route'
+    DependsOn: PrivateRTB
+    Properties:
+      RouteTableId: !Ref PrivateRTB
+      DestinationCidrBlock: !Ref adminCidr
+      VpcPeeringConnectionId: !Ref adminVPCPeeringConnection
+
+  routeadminVPC:
+    Type: 'AWS::EC2::Route'
+    DependsOn: PrivateRTB
+    Properties:
+      RouteTableId: !Ref admRouteTable
+      DestinationCidrBlock: !Ref VPCCidr
+      VpcPeeringConnectionId: !Ref adminVPCPeeringConnection
+
+  PrivaterouteVPCbrowsing:
+    Type: 'AWS::EC2::Route'
+    DependsOn: PrivateRTB
+    Properties:
+      RouteTableId: !Ref PrivateRTB
+      DestinationCidrBlock: !Ref browsingCidr
+      VpcPeeringConnectionId: !Ref browsingVPCPeeringConnection
+
+  routebrowsingVPC:
+    Type: 'AWS::EC2::Route'
+    DependsOn: PrivateRTB
+    Properties:
+      RouteTableId: !Ref browsingRouteTable
+      DestinationCidrBlock: !Ref VPCCidr
+      VpcPeeringConnectionId: !Ref browsingVPCPeeringConnection
+
+  SubnetRouteTableAssociationNETAZ1SRV0RTB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref NETAZ1SRV0
+      RouteTableId: !Ref PrivateRTB
+    DependsOn:
+      - NETAZ1SRV0
+      - PrivateRTB
+
+  adminVPCPeeringConnection:
+    Type: 'AWS::EC2::VPCPeeringConnection'
+    Properties:
+      VpcId: !Ref adminVpc
+      PeerVpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join
+            - _
+            - - PCX_ADM
+              - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+        - Key: infra
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+
+  browsingVPCPeeringConnection:
+    Type: 'AWS::EC2::VPCPeeringConnection'
+    Properties:
+      VpcId: !Ref browsingVpc
+      PeerVpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join
+            - _
+            - - PCX_BROS
+              - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+        - Key: infra
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+
+  SGADM:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access from admin
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref adminCidr
+      Tags:
+        - Key: Name
+          Value: !Join
+            - _
+            - - SGR
+              - ADM
+              - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+        - Key: infra
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+
+  VPCInstanceADM1:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      Comment: Install a hosting LB server
+    Properties:
+      ImageId: !GetAtt
+        - AMIInfo
+        - Id
+      SecurityGroupIds:
+        - !Ref SGADM
+      SubnetId: !Ref NETAZ1SRV0
+      InstanceType: !Ref instanceTypeADM
+      KeyName: !Ref sshPublicKey
+      IamInstanceProfile: !Ref IAMROLE
+      Tags:
+        - Key: Name
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+              - HOSTING
+              - ADM
+              - '1'
+        - Key: fonction
+          Value: lb
+        - Key: stage
+          Value: adm
+        - Key: az
+          Value: '1'
+        - Key: role
+          Value: administration
+        - Key: infra
+          Value: !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+    DependsOn: SGADM
+
+  dnsRecordVPCInstanceADM1:
+    Type: 'AWS::Route53::RecordSet'
+    Properties:
+      HostedZoneName: !Ref zone53
+      Name: !Join
+        - .
+        - - !Join
+            - _
+            - - !Ref VPCName
+              - !Ref VPCUuid
+              - !Ref bl
+              - !Ref env
+              - HOSTING
+              - ADM
+              - '1'
+          - !Ref zone53
+      Type: CNAME
+      TTL: '900'
+      ResourceRecords:
+        - !Join
+          - ''
+          - - !GetAtt
+              - VPCInstanceADM1
+              - PrivateDnsName
+            - .
+
+  AMIInfo:
+    Type: 'Custom::AMIInfo'
+    Properties:
+      ServiceToken: !GetAtt
+        - AMIInfoFunction
+        - Arn
+      Region: !Ref 'AWS::Region'
+      OSType: linux
+  AMIInfoFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
+      Handler: !Join
+        - ''
+        - - !Ref ModuleName
+          - .handler
+      Role: !GetAtt
+        - LambdaExecutionRole
+        - Arn
+      Runtime: nodejs6.10
+      Timeout: '10'
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeImages'
+                Resource: '*'

@@ -1,0 +1,33 @@
+---
+
+- name:  Create grafana organisation for each domain
+  uri:
+    url: https://localhost:3000/api/orgs
+    method: POST
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    body: "{ \"name\": \"{{ item.domain }}\" }"
+    force_basic_auth: yes
+    status_code: 200, 409
+    body_format: json
+    return_content: yes
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ granted_domains }}"
+  register: granted_orgs_grafana
+  notify: Enable and restart grafana systemd service
+
+- name: grafana remember which organisations are created
+  set_fact:
+    new_orgs_grafana: "{{ new_orgs_grafana | default([]) + [item] }}"
+  when: not(
+          (granted_orgs_grafana.results is undefined)
+          or
+          (granted_orgs_grafana.results | length > 0)
+          or
+          (granted_orgs_grafana.results is none)
+          or
+          (granted_orgs_grafana.results | trim == '')
+        ) and item.status == 200
+  with_items: "{{ granted_orgs_grafana.results }}"

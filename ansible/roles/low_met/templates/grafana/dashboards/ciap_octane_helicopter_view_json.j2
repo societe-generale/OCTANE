@@ -1,0 +1,757 @@
+{
+  "__inputs": [
+    {
+      "name": "cIAP",
+      "label": "cIAP",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "5.1.4"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "natel-discrete-panel",
+      "name": "Discrete",
+      "version": "0.0.8-pre"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": false,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1533721468697,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "cIAP"
+      ],
+      "targetBlank": true,
+      "title": "Details",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "backgroundColor": "rgba(128,128,128,0.1)",
+      "colorMaps": [
+        {
+          "color": "#fce2de",
+          "text": "N/A"
+        },
+        {
+          "color": "#508642",
+          "text": "success"
+        },
+        {
+          "color": "#bf1b00",
+          "text": "connection_failed"
+        },
+        {
+          "color": "#508642",
+          "text": "OK"
+        },
+        {
+          "color": "#bf1b00",
+          "text": "KO"
+        },
+        {
+          "color": "#bf1b00",
+          "text": "timeout"
+        }
+      ],
+      "crosshairColor": "#8F070C",
+      "datasource": "cIAP",
+      "decimals": null,
+      "display": "timeline",
+      "expandFromQueryS": 0,
+      "extendLastValue": true,
+      "gridPos": {
+        "h": 17,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "highlightOnMouseover": true,
+      "id": 4,
+      "legendMaxValues": null,
+      "legendPercentDecimals": 0,
+      "legendSortBy": "-ms",
+      "lineColor": "rgba(0,0,0,0.1)",
+      "links": [],
+      "metricNameColor": "#dedaf7",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "repeat": "Domain",
+      "repeatDirection": "v",
+      "rowHeight": 30,
+      "showDistinctCount": false,
+      "showLegend": true,
+      "showLegendCounts": false,
+      "showLegendNames": true,
+      "showLegendPercent": false,
+      "showLegendTime": true,
+      "showLegendValues": true,
+      "showTimeAxis": true,
+      "showTransitionCount": false,
+      "targets": [
+        {
+          "alias": "[ [[tag_az]] ] [ [[tag_stage]] [[tag_fonction]] ] [ lb ] Haproxy",
+          "groupBy": [
+            {
+              "params": [
+                "stage"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fonction"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "az"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "haproxy",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "status"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "proxy",
+              "operator": "=~",
+              "value": "/^$Domains$/"
+            },
+            {
+              "condition": "AND",
+              "key": "stage",
+              "operator": "=",
+              "value": "up"
+            },
+            {
+              "condition": "AND",
+              "key": "fonction",
+              "operator": "=",
+              "value": "lb"
+            },
+            {
+              "condition": "AND",
+              "key": "az",
+              "operator": "=~",
+              "value": "/^$AZ$/"
+            }
+          ]
+        },
+        {
+          "alias": "[ [[tag_az]] ] [ [[tag_stage]] [[tag_fonction]] ] [ [[tag_component]]  -> mid ] [[tag_port]]",
+          "groupBy": [
+            {
+              "params": [
+                "port"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fonction"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "stage"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "component"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "az"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "net_response",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "result_type"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "domain",
+              "operator": "=~",
+              "value": "/^$Domains$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fonction",
+              "operator": "=",
+              "value": "lb"
+            },
+            {
+              "condition": "AND",
+              "key": "server",
+              "operator": "=~",
+              "value": "/internal/"
+            },
+            {
+              "condition": "AND",
+              "key": "az",
+              "operator": "=~",
+              "value": "/^$AZ$/"
+            },
+            {
+              "condition": "AND",
+              "key": "stage",
+              "operator": "=",
+              "value": "up"
+            }
+          ]
+        },
+        {
+          "alias": "[ [[tag_az]] ] [ [[tag_stage]] [[tag_fonction]] ] [ [[tag_component]] ] [[tag_port]]",
+          "groupBy": [
+            {
+              "params": [
+                "port"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fonction"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fonction"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "stage"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "component"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "az"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "net_response",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "result_type"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "domain",
+              "operator": "=~",
+              "value": "/^$Domains$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fonction",
+              "operator": "=",
+              "value": "waf"
+            },
+            {
+              "condition": "AND",
+              "key": "server",
+              "operator": "!~",
+              "value": "/internal/"
+            },
+            {
+              "condition": "AND",
+              "key": "az",
+              "operator": "=~",
+              "value": "/^$AZ$/"
+            },
+            {
+              "condition": "AND",
+              "key": "stage",
+              "operator": "=",
+              "value": "mid"
+            }
+          ]
+        },
+        {
+          "alias": "[ [[tag_az]] ] [ [[tag_stage]] [[tag_fonction]] ] [ [[tag_component]]  -> low ] [[tag_port]]",
+          "groupBy": [
+            {
+              "params": [
+                "port"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fonction"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "component"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "stage"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "az"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "net_response",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "result_type"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "domain",
+              "operator": "=~",
+              "value": "/^$Domains$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fonction",
+              "operator": "=",
+              "value": "waf"
+            },
+            {
+              "condition": "AND",
+              "key": "server",
+              "operator": "=~",
+              "value": "/internal/"
+            },
+            {
+              "condition": "AND",
+              "key": "az",
+              "operator": "=~",
+              "value": "/^$AZ$/"
+            },
+            {
+              "condition": "AND",
+              "key": "stage",
+              "operator": "=",
+              "value": "mid"
+            }
+          ]
+        },
+        {
+          "alias": "[ [[tag_az]] ] [ [[tag_stage]] [[tag_fonction]] ] [ [[tag_component]]  ] [[tag_port]]",
+          "groupBy": [
+            {
+              "params": [
+                "port"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fonction"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "component"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "stage"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "az"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "net_response",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "E",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "result_type"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "domain",
+              "operator": "=~",
+              "value": "/^$Domains$/"
+            },
+            {
+              "condition": "AND",
+              "key": "az",
+              "operator": "=~",
+              "value": "/^$AZ$/"
+            },
+            {
+              "condition": "AND",
+              "key": "component",
+              "operator": "=",
+              "value": "nginx"
+            },
+            {
+              "condition": "AND",
+              "key": "fonction",
+              "operator": "=",
+              "value": "fw"
+            },
+            {
+              "condition": "AND",
+              "key": "stage",
+              "operator": "=",
+              "value": "low"
+            }
+          ]
+        },
+        {
+          "alias": "[ [[tag_az]] ] [ [[tag_stage]] [[tag_fonction]] ] -> [[tag_server]]:[[tag_port]]",
+          "groupBy": [
+            {
+              "params": [
+                "port"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "az"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fonction"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "stage"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "component"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "net_response",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "F",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "result_type"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "domain",
+              "operator": "=~",
+              "value": "/^$Domains$/"
+            },
+            {
+              "condition": "AND",
+              "key": "az",
+              "operator": "=~",
+              "value": "/^$AZ$/"
+            },
+            {
+              "condition": "AND",
+              "key": "component",
+              "operator": "=",
+              "value": "client"
+            },
+            {
+              "condition": "AND",
+              "key": "fonction",
+              "operator": "=",
+              "value": "fw"
+            },
+            {
+              "condition": "AND",
+              "key": "stage",
+              "operator": "=",
+              "value": "low"
+            }
+          ]
+        }
+      ],
+      "textSize": 12,
+      "textSizeTime": 12,
+      "timeTextColor": "#d8d9da",
+      "title": "Helicopter view availability",
+      "transparent": true,
+      "type": "natel-discrete-panel",
+      "units": "short",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        },
+        {
+          "op": "=",
+          "text": "OK",
+          "value": "success"
+        },
+        {
+          "op": "=",
+          "text": "KO",
+          "value": "connection_failed"
+        },
+        {
+          "op": "=",
+          "text": "OK",
+          "value": "UP"
+        },
+        {
+          "op": "=",
+          "text": "KO",
+          "value": "DOWN"
+        }
+      ],
+      "valueTextColor": "#000000",
+      "writeAllValues": false,
+      "writeLastValue": false,
+      "writeMetricNames": true
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 16,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "cIAP",
+        "hide": 2,
+        "includeAll": false,
+        "label": "Domains",
+        "multi": false,
+        "name": "Domains",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"proxy\" where \"proxy\" = '{{ item[0].name }}'",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "cIAP",
+        "hide": 1,
+        "includeAll": true,
+        "label": "AZ",
+        "multi": true,
+        "name": "AZ",
+        "options": [],
+        "query": "show tag values with key = \"az\" where \"proxy\" =~ /$Domains/;",
+        "refresh": 2,
+        "regex": "",
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1m",
+      "5m"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "cIAP",
+  "uid": null,
+  "version": 21
+}

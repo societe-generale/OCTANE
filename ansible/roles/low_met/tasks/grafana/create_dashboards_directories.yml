@@ -1,0 +1,13 @@
+---
+
+- name: Create grafana dashboards directory (1 per organisation)
+  file:
+    path: "/etc/grafana/provisioning/dashboards/{{ item.name }}-{{ item.id }}"
+    state: directory
+    owner: root
+    group: grafana
+    mode: 0775
+  with_items:
+    - "{{ all_orgs_grafana.json }}"
+  when: item.name != "Main Org."
+  notify: Enable and restart grafana systemd service

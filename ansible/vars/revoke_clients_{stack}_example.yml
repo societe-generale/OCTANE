@@ -1,0 +1,6 @@
+openvpn_revoke_these_clients:
+  - name: "lulu"
+    ip: 5
+    email: "lulu@mail.com"
+    client_network: "10.10.100.77"
+    client_netmask: "255.255.255.255"

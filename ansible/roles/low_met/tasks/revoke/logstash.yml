@@ -1,0 +1,17 @@
+---
+
+- name:  Remove logstash patterns
+  file:
+    path: "/etc/logstash/conf.d/{{ item[0].domain }}/output_{{ item[1] }}.conf"
+    state: absent
+  with_nested:
+    - "{{ revoked_domains }}"
+    - [ "haproxy", "nginx", "haproxy_access", "havp_access", "iptables_access", "mod_security", "net_response", "nginx_access", "suricata", "vpn_access" ]
+
+- name: Remove logstash domains directory
+  file:
+    path: "/etc/logstash/conf.d/{{ item.domain }}"
+    state: absent
+  with_items:
+    - "{{ revoked_domains }}"
+

@@ -1,0 +1,23 @@
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i tun0 -p tcp -m tcp --dport 22 -j REJECT --reject-with icmp-host-prohibited
+-A INPUT -i tun0 -p tcp -m tcp --dport {{ v_vpn_port }} -j REJECT --reject-with icmp-host-prohibited
+-A INPUT -p tcp -m tcp --dport {{ v_healthcheck_port }} -m state --state NEW -m comment --comment Healthcheck -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 22 -m comment --comment "Allow incoming SSH connection" -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p tcp -m tcp --dport {{ v_vpn_port }} -m comment --comment "Allow incoming VPN connection" -j ACCEPT
+-A INPUT -j DROP
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+{% for stream in granted_vpn_streams %}
+-A POSTROUTING -s {{openvpn_server_network}}0/{{openvpn_server_netmask}} -m tcp -p tcp --dport {{ stream.stream }} -j SNAT --to-source {{ ansible_default_ipv4.address }}:{{ stream.stream }}
+{% endfor %}
+COMMIT

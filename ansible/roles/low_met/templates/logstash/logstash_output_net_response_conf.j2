@@ -1,0 +1,42 @@
+output {
+  if [database] == "{{ item[0].domain | replace('.', '_') }}" {
+    if [metrics][name] == "net_response" {
+      influxdb {
+         host => "{{ v_metrology_influxdb_host }}"
+         user => "{{ v_metrology_influxdb_user }}"
+         password => "{{ v_metrology_influxdb_password }}"
+         port => 8086
+         data_points => {
+             "response_time" => "%{[metrics][fields][response_time]}"
+             "result_code" => "%{[metrics][fields][result_code]}"
+             "result_type" => "%{[metrics][fields][result_type]}"
+             "az" => "%{[metrics][tags][az]}"
+             "bl" => "%{[metrics][tags][bl]}"
+             "ciap" => "%{[metrics][tags][ciap]}"
+             "component" => "%{[metrics][tags][component]}"
+             "domain" => "%{[metrics][tags][domain]}"
+             "env" => "%{[metrics][tags][env]}"
+             "fonction" => "%{[metrics][tags][fonction]}"
+             "hostname" => "%{[metrics][tags][host]}"
+             "port" => "%{[metrics][tags][port]}"
+             "protocol" => "%{[metrics][tags][protocol]}"
+             "region" => "%{[metrics][tags][region]}"
+             "server" => "%{[metrics][tags][server]}"
+             "stage" => "%{[metrics][tags][stage]}"
+         }
+         coerce_values => {
+             "response_time" => "float"
+             "result_code" => "integer"
+             "port" => "integer"
+         }
+         measurement => "net_response"
+         use_event_fields_for_data_points => false
+         allow_time_override => true
+         time_precision => "ms"
+         send_as_tags => [ "domain", "az", "bl", "component", "hostname", "port", "protocol", "ciap", "env", "fonction", "region", "stage", "server" ]
+         db => "{{ item[0].domain | replace('.', '_') }}"
+         ssl => true
+      }
+    }
+  }
+}

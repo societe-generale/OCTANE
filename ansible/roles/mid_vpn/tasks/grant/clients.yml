@@ -1,0 +1,101 @@
+# generate client keys
+---
+- name: Copy openssl client extensions
+  copy:
+    src: openssl-client.ext
+    dest: "{{openvpn_key_dir}}"
+    owner: root
+    group: root
+    backup: yes
+    force: yes
+    mode: 0400
+
+- name: generate client key
+  command: "openssl req -nodes -newkey rsa:{{openvpn_rsa_bits}} -keyout {{ stack }}-{{item.email}}.key -out {{ stack }}-{{item.email}}.csr -days 3650 -subj /CN={{ openvpn_x509_client_name_prefix }}{{ item.email[:24] }}/"
+  args:
+    chdir: "{{ openvpn_key_dir }}"
+    creates: "{{ stack }}-{{item.email}}.key"
+  with_items: 
+    - "{{openvpn_grant_these_clients}}"
+
+- name: protect client keys
+  file:
+    path: "{{openvpn_key_dir}}/{{ stack }}-{{item.email}}.key"
+    mode: 0400
+  with_items: 
+    - "{{openvpn_grant_these_clients}}"
+
+- name: sign client key
+  command: openssl x509 -req -in {{ stack }}-{{item.email}}.csr -out {{ stack }}-{{item.email}}.crt -CA {{ openvpn_ca_crt_name }} -CAkey {{ openvpn_ca_key_name }} -sha256 -days {{ openvpn_ca_validity_days }} -extfile openssl-client.ext
+  args:
+    chdir: "{{openvpn_key_dir}}"
+    creates: "{{ stack }}-{{item.email}}.crt"
+  with_items: 
+    - "{{openvpn_grant_these_clients}}"
+
+- name: register server ca key
+  slurp:
+    src: "{{openvpn_key_dir}}/{{ openvpn_ca_crt_name }}"
+  register: ca_cert
+
+- name: register tls-auth key
+  slurp:
+    src: "{{openvpn_key_dir}}/{{ openvpn_ta_key_name }}"
+  register: tls_auth
+
+- name: register client certs
+  slurp:
+    src: "{{openvpn_key_dir}}/{{ stack }}-{{item.email}}.crt"
+  with_items: "{{openvpn_grant_these_clients}}"
+  register: client_certs
+
+- name: register client keys
+  slurp:
+    src: "{{openvpn_key_dir}}/{{ stack }}-{{item.email}}.key"
+  with_items: "{{openvpn_grant_these_clients}}"
+  register: client_keys
+
+- name: generate client config
+  template:
+    src: client.ovpn.j2
+    dest: "{{ openvpn_ovpn_dir }}/{{ stack }}-{{item.email}}.ovpn"
+    owner: root
+    group: root
+    force: yes
+    mode: 0400
+  with_items: 
+    - "{{openvpn_grant_these_clients}}"
+
+- name: generate ccd client config
+  template:
+    src: client.ccd.j2
+    dest: "{{ openvpn_ccd_dir }}/{{ stack }}-{{item.email}}"
+    owner: root
+    group: root
+    force: yes
+    mode: 0444
+  with_items: 
+    - "{{openvpn_grant_these_clients}}"
+
+- name: fetch client config
+  fetch:
+    src: "{{ openvpn_ovpn_dir }}/{{ stack }}-{{item.email}}.ovpn"
+    dest: "/tmp/ansible/{{ stack }}-{{item.email}}/{{inventory_hostname}}.ovpn"
+    force: yes
+    flat: yes
+  with_items: 
+    - "{{openvpn_grant_these_clients}}"
+
+- name: generate client archive
+  archive:
+    path:
+        - "{{openvpn_key_dir}}/{{ stack }}-{{item.email}}.key"
+        - "{{openvpn_key_dir}}/{{ stack }}-{{item.email}}.crt"
+        - "{{openvpn_ovpn_dir}}/{{ stack }}-{{item.email}}.ovpn"
+        - "{{openvpn_key_dir}}/ca.crt"
+        - "{{openvpn_key_dir}}/ta.key"
+    dest: "/{{openvpn_clients_dir}}/{{ stack }}-{{item.email}}.zip"
+    force: yes
+    format: zip
+  with_items: 
+    - "{{openvpn_grant_these_clients}}"

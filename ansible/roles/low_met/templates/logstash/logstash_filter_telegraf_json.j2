@@ -1,0 +1,29 @@
+# Telegraf input filters
+  if [tag] == "telegraf_json" {
+    json {
+      source => "message"
+    }
+    split {
+      field => "metrics"
+    }
+    if [metrics][name] == "net_response" {
+      mutate {
+        copy => { "[metrics][tags][domain]" => "database" }
+      }
+    }
+    if [metrics][name] == "nginx" {
+      mutate {
+        copy => { "[metrics][tags][domain]" => "database" }
+      }
+    }
+    if [metrics][name] == "haproxy" {
+      mutate {
+        copy => { "[metrics][tags][proxy]" => "database" }
+      }
+    }
+    mutate {
+      gsub => [
+        "database", "\.", "_"
+      ]
+    }
+  }

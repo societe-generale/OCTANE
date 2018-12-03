@@ -1,0 +1,50 @@
+# OpenVPN configuration
+  if [fields][log_type] == "vpn_connect" {
+     grok {
+          #match => [ "message" , "%{SYSLOGTIMESTAMP:timestamp} %{DATA} %{IPORHOST:source_ip}:%{DATA:source_port} \[{{ stack }}-Client-%{DATA:domain}-%{DATA:name}\] %{GREEDYDATA}" ]
+          match => [ "message" , "%{SYSLOGTIMESTAMP:timestamp} %{DATA} %{IPORHOST:source_ip}:%{DATA:source_port} \[SBX-Client-%{DATA:name}\] %{GREEDYDATA}" ]
+           add_field => [ "az", "%{[fields][az]}" ]
+           add_field => [ "ciap", "%{[fields][ciap]}" ]
+           add_field => [ "bl", "%{[fields][bl]}" ]
+           add_field => [ "env", "%{[fields][env]}" ]
+           add_field => [ "fonction", "%{[fields][fonction]}" ]
+           add_field => [ "region", "%{[fields][region]}" ]
+           add_field => [ "stage", "%{[fields][stage]}" ]
+           add_field => [ "hostname", "%{[fields][hostname]}" ]
+           add_field => [ "genre", "%{[fields][genre]}" ]
+           add_field => [ "connect", "1" ]
+# A enlever lorsque la configuration du VPN prendra en compte le domaine
+           add_field => [ "domain", "check.theforce.net" ]
+     }
+     mutate {
+       copy => { "domain" => "database" }
+     }
+
+     mutate {
+       gsub => [ "database", "\.", "_" ]
+     }
+  } else if [fields][log_type] == "vpn_disconnect" {
+     grok {
+          #match => [ "message" , "%{SYSLOGTIMESTAMP:timestamp} %{DATA} {{ stack }}-Client-%{DATA:domain}-%{DATA:name}/%{IPORHOST:source_ip}:%{DATA:source_port} %{GREEDYDATA}" ]
+          match => [ "message" , "%{SYSLOGTIMESTAMP:timestamp} %{DATA} SBX-Client-%{DATA:name}/%{IPORHOST:source_ip}:%{DATA:source_port} %{GREEDYDATA}" ]
+           add_field => [ "az", "%{[fields][az]}" ]
+           add_field => [ "ciap", "%{[fields][ciap]}" ]
+           add_field => [ "bl", "%{[fields][bl]}" ]
+           add_field => [ "env", "%{[fields][env]}" ]
+           add_field => [ "fonction", "%{[fields][fonction]}" ]
+           add_field => [ "region", "%{[fields][region]}" ]
+           add_field => [ "stage", "%{[fields][stage]}" ]
+           add_field => [ "hostname", "%{[fields][hostname]}" ]
+           add_field => [ "genre", "%{[fields][genre]}" ]
+           add_field => [ "connect", "0" ]
+# A enlever lorsque la configuration du VPN prendra en compte le domaine
+           add_field => [ "domain", "check.theforce.net" ]
+     }
+     mutate {
+       copy => { "domain" => "database" }
+     }
+
+     mutate {
+       gsub => [ "database", "\.", "_" ]
+     }
+  }

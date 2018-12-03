@@ -1,0 +1,22 @@
+---
+
+granted_domains:
+- backend_ip_or_fqdn: my.backend.org
+  backend_port: 1234
+  backend_protocol: http # can be https
+  domain: my.public.domain
+  email: my_name@my.public.domain
+  havp_listening_ip: 127.0.0.1
+  havp_listening_port: uniq HAVP port
+  havp_protocol: http
+  http: false
+  http2_listening_ip: 127.0.0.1
+  http2_listening_port: uniq port
+  http_listening_ip: 0.0.0.0
+  http_listening_port: uniq http port
+  https_listening_ip: 0.0.0.0
+  https_listening_port: uniq https port
+  id: uniq ID
+  mod_security: 'on' # can be http
+  preserve_host: true # can be false
+  proxy_timeout: 5

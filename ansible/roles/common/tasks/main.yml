@@ -1,0 +1,68 @@
+---
+
+- name: Add granted domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "granted_domains_{{stack}}.yml"
+      skip: true
+  tags: [always]
+
+- name: Add revoked domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "revoked_domains_{{stack}}.yml"
+      skip: true
+  tags: [always]
+
+- import_tasks: grant/aws_ec2.yml
+  tags: 
+   - init
+   - common
+   - grantdomain
+   - revokedomain
+
+- import_tasks: grant/aws_elb.yml
+  tags: 
+   - init
+   - common
+   - grantdomain
+   - revokedomain
+
+- import_tasks: grant/aws_sg.yml
+  tags: 
+   - init
+   - common
+   - grantdomain
+   - revokedomain
+
+- import_tasks: init/yum_repos.yml
+  tags: 
+   - init
+   - common
+
+- import_tasks: init/softwares.yml
+  tags: 
+   - init
+   - common
+
+- import_tasks: init/system.yml
+  tags: 
+   - init
+   - common
+
+- import_tasks: init/selinux.yml
+  tags: 
+   - init
+   - common
+
+- import_tasks: init/haproxy_healthcheck.yml
+  tags: 
+   - init
+   - common
+
+- import_tasks: init/ssl.yml
+  tags: 
+   - init
+   - common

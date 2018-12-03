@@ -1,0 +1,122 @@
+---
+
+- name: Gather facts ELBs
+  become: false
+  run_once: true
+  local_action:
+    module: elb_classic_lb_facts
+    region: "{{ v_region }}"
+  register: elb_facts
+
+- name: Pause for 2 seconds otherwise AWS grunt
+  pause:
+    seconds: 2
+
+- name:  Retrieve "{{ v_clb_up_mid }}" informations
+  run_once: true
+  set_fact:
+    clb_up_mid_sg: "{{ item.security_groups[0] }}"
+    clb_up_mid_name: "{{ item.load_balancer_name }}"
+    clb_up_mid_dns_name: "{{ item.dns_name }}"
+    clb_up_mid_az: "{{ item.availability_zones }}"
+  with_items: "{{ elb_facts.elbs }}"
+  when: ( item.tags["aws:cloudformation:logical-id"].find(v_clb_up_mid) != -1) and ( item.tags["aws:cloudformation:stack-name"].find(stack) != -1 )
+
+- name:  Retrieve "{{ v_clb_up_vpn }}" informations
+  run_once: true
+  set_fact:
+    clb_up_vpn_sg: "{{ item.security_groups[0] }}"
+    clb_up_vpn_name: "{{ item.load_balancer_name }}"
+    clb_up_vpn_dns_name: "{{ item.dns_name }}"
+    clb_up_vpn_az: "{{ item.availability_zones }}"
+  with_items: "{{ elb_facts.elbs }}"
+  when: ( item.tags["aws:cloudformation:logical-id"].find(v_clb_up_vpn) != -1) and ( item.tags["aws:cloudformation:stack-name"].find(stack) != -1 )
+
+- name:  Retrieve "{{v_clb_mid_low}}" informations
+  run_once: true
+  set_fact:
+    clb_mid_low_sg: "{{ item.security_groups[0] }}"
+    clb_mid_low_name: "{{ item.load_balancer_name }}"
+    clb_mid_low_dns_name: "{{ item.dns_name }}"
+    clb_mid_low_az: "{{ item.availability_zones }}"
+  with_items: "{{ elb_facts.elbs }}"
+  when: ( item.tags["aws:cloudformation:logical-id"].find(v_clb_mid_low) != -1) and ( item.tags["aws:cloudformation:stack-name"].find(stack) != -1 )
+
+- name:  Add listeners settings to "{{ clb_up_mid_name }}" ELB for granted domains (if needed)
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_elb_lb
+    state: present
+    name: "{{ clb_up_mid_name }}"
+    purge_listeners: no
+    purge_subnets: no
+    purge_zones: no
+    region: "{{ v_region }}"
+    zones: "{{ clb_up_mid_az }}"
+    scheme: "internal"
+    wait: yes
+    listeners:
+      - protocol: tcp
+        load_balancer_port: "{{ item.http_listening_port }}"
+        instance_port: "{{ item.http_listening_port }}"
+      - protocol: tcp
+        load_balancer_port: "{{ item.https_listening_port }}"
+        instance_port: "{{ item.https_listening_port }}"
+  with_items: "{{ granted_domains }}"
+  tags:
+    - grantdomain
+
+- name: Pause for 2 seconds otherwise AWS grunt
+  pause:
+    seconds: 2
+
+- name:  Add or modify VPN listener setting on "{{ clb_up_vpn_name }}" ELB
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_elb_lb
+    state: present
+    name: "{{ clb_up_vpn_name }}"
+    purge_listeners: no
+    purge_subnets: no
+    purge_zones: no
+    region: "{{ v_region }}"
+    zones: "{{ clb_up_vpn_az }}"
+    scheme: "internal"
+    wait: yes
+    listeners:
+      - protocol: tcp
+        load_balancer_port: "{{ v_vpn_port }}"
+        instance_port: "{{ v_vpn_port }}"
+  tags: init
+
+- name: Pause for 2 seconds otherwise AWS grunt
+  pause:
+    seconds: 2
+  tags: init
+
+- name:  Add listeners settings to "{{ clb_mid_low_name }}" ELB for granted domains (if needed)
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_elb_lb
+    state: present
+    name: "{{ clb_mid_low_name }}"
+    purge_listeners: no
+    purge_subnets: no
+    purge_zones: no
+    region: "{{ v_region }}"
+    zones: "{{ clb_mid_low_az }}"
+    scheme: "internal"
+    wait: yes
+    listeners:
+      - protocol: tcp
+        load_balancer_port: "{{ item.http_listening_port }}"
+        instance_port: "{{ item.http_listening_port }}"
+      - protocol: tcp
+        load_balancer_port: "{{ item.https_listening_port }}"
+        instance_port: "{{ item.https_listening_port }}"
+  with_items: "{{ granted_domains }}"
+  tags:
+    - grantdomain

@@ -1,0 +1,44 @@
+---
+
+- name:  Change bash prompt behaviour
+  lineinfile:
+    path: "/etc/skel/.bashrc"
+    line: export PS1="\[\e[32m\][DEV] {{ ec2_stage }} {{ ec2_fonction }} \t \[\e[36m\]\u@\h\[\e[m\] \[\e[32m\]\w \\$\[\e[m\] "
+
+- name:  Change bash prompt behaviour for cloud-user
+  lineinfile:
+    path: "/home/cloud-user/.bashrc"
+    line: export PS1="\[\e[32m\][DEV] {{ ec2_stage }} {{ ec2_fonction }} \t \[\e[36m\]\u@\h\[\e[m\] \[\e[32m\]\w \\$\[\e[m\] "
+
+- name:  Change bash prompt behaviour for root
+  lineinfile:
+    path: "/root/.bashrc"
+    line: export PS1="\[\e[31m\]\e[7m[PRD] {{ ec2_stage }} {{ ec2_fonction }}\e[27m \t \[\e[36m\]\u@\h\[\e[m\] \[\e[31m\]\w \\$\[\e[m\] "
+
+- name:  Add motd
+  template:
+    src: "motd.j2"
+    dest: "/etc/motd"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+
+- name: Create vimrc file
+  copy:
+    content: ""
+    dest: "/{{ item }}/.vimrc"
+    force: no
+    mode: 0666 
+  with_items:
+    - "root"
+    - "home/cloud-user"
+
+- name:  Change vim colorscheme
+  lineinfile:
+    path: "/{{ item }}/.vimrc"
+    line: colorscheme desert
+  with_items:
+    - "root"
+    - "home/cloud-user"

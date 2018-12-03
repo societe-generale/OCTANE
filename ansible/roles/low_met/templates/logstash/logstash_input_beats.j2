@@ -1,0 +1,7 @@
+# Beats input
+  beats {
+    port => 5044
+    ssl => true
+    ssl_certificate => "{{ v_certificates_path}}/filebeat.crt"
+    ssl_key => "{{ v_certificates_path}}/filebeat.key"
+  }

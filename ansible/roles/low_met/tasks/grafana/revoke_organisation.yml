@@ -1,0 +1,11 @@
+---
+
+#- import_tasks: delete_accountable_user.yml
+
+- import_tasks: delete_organisations.yml
+
+#- import_tasks: delete_dashboards_directories.yml
+
+#- import_tasks: delete_datasources.yml
+
+#- import_tasks: delete_dashboards.yml

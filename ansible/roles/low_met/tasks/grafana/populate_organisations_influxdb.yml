@@ -1,0 +1,47 @@
+---
+
+- name: Create influxdb database (name, replace(. by _) )
+  uri:
+    url: "https://localhost:8086/query?q=CREATE%20DATABASE%20%22{{ item.name | replace('.', '_') }}%22"
+    method: POST
+#    user: admin
+#    password: "{{ v_grafana_admin_password }}"
+    body: ""
+    force_basic_auth: no
+    status_code: 200
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ all_orgs_grafana.json }}"
+  when: item.name != "Main Org."
+
+- name: Create specifical user for each influxdb database
+  uri:
+    url: "https://localhost:8086/query?q=CREATE%20USER%20%22{{ item.name | regex_replace('\\.', '_') }}%22%20WITH%20PASSWORD%20%27{{ item.name | replace('\\.', '_') }}%27"
+    method: POST
+#    user: admin
+#    password: "{{ v_grafana_admin_password }}"
+    body: ""
+    force_basic_auth: no
+    status_code: 200
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ all_orgs_grafana.json }}"
+  when: item.name != "Main Org."
+
+- name: Grant READ only privilege to user for reading its influxdb database
+  uri:
+    url: "https://localhost:8086/query?q=GRANT%20READ%20ON%20%22{{ item.name | regex_replace('\\.', '_') }}%22%20TO%20%22{{ item.name | regex_replace('\\.', '_') }}%22"
+    method: POST
+#    user: admin
+#    password: "{{ v_grafana_admin_password }}"
+    body: ""
+    force_basic_auth: no
+    status_code: 200
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ all_orgs_grafana.json }}"
+  when: item.name != "Main Org."
+

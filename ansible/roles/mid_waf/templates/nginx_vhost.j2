@@ -1,0 +1,169 @@
+{% if item.http| bool %}
+    server {
+        listen       {{ item.http_listening_ip }}:{{ item.http_listening_port }};
+        server_name  {{ item.domain }}
+{% if item.alias is defined %}
+{% for _alias in item.alias %}
+                     {{ _alias }}
+{% endfor %}
+{% endif %}
+                     ;
+	access_log   "{{ v_log_path }}/nginx/{{ item.domain }}/{{ item.domain }}_http_access.log"  main;
+
+        location /nginx_status {
+          stub_status on;
+          access_log   off;
+          allow 127.0.0.1;
+          deny all;
+        }
+
+        location /mingtree/ {
+                modsecurity {{ item.mod_security }};
+                modsecurity_rules_file /etc/nginx/mingtree_modsec.conf;
+                proxy_set_header Host            $host;
+{% if item.proxy_timeout is defined %}
+                proxy_read_timeout {{item.proxy_timeout}}s;
+{% endif %}
+{% if item.havp_protocol is defined %}
+                proxy_pass {{ item.havp_protocol }}://{{ item.havp_listening_ip }}:{{ item.havp_listening_port }}/mingtree/;
+{% else %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.http_listening_port }}/mingtree/;
+{% endif %}
+        }
+
+        location / {
+                modsecurity {{ item.mod_security }};
+                modsecurity_rules_file /etc/nginx/modsec.conf;
+                proxy_set_header Host            $host;
+{% if item.proxy_timeout is defined %}
+                proxy_read_timeout {{item.proxy_timeout}}s;
+{% endif %}
+{% if item.havp_protocol is defined %}
+                proxy_pass {{ item.havp_protocol }}://{{ item.havp_listening_ip }}:{{ item.havp_listening_port }}/;
+{% else %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.http_listening_port }}/;
+{% endif %}
+        }
+
+        error_page 404 /404.html;
+            location = /40x.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+        }
+    }
+{% endif %}
+
+    server {
+        listen       {{ item.https_listening_ip }}:{{ item.https_listening_port }} ssl;
+        server_name  {{ item.domain }}
+{% if item.alias is defined %}
+{% for _alias in item.alias %}
+                     {{ _alias }}
+{% endfor %}
+{% endif %}
+                     ;
+	access_log   "{{ v_log_path }}/nginx/{{ item.domain }}/{{ item.domain }}_https_access.log"  main;
+
+        location /nginx_status {
+          stub_status on;
+          access_log   off;
+          allow 127.0.0.1;
+          deny all;
+        }
+
+        location /mingtree/ {
+                modsecurity {{ item.mod_security }};
+                modsecurity_rules_file /etc/nginx/mingtree_modsec.conf;
+                proxy_set_header Host            $host;
+{% if item.proxy_timeout is defined %}
+                proxy_read_timeout {{item.proxy_timeout}}s;
+{% endif %}
+{% if item.havp_protocol is defined %}
+                proxy_pass {{ item.havp_protocol }}://{{ item.havp_listening_ip }}:{{ item.havp_listening_port }}/mingtree/;
+{% else %}
+{% if item.backend_protocol  == "https" %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.https_listening_port }}/mingtree/;
+{% else %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.http_listening_port }}/mingtree/;
+{% endif %}
+{% endif %}
+        }
+
+        location / {
+                modsecurity {{ item.mod_security }};
+                modsecurity_rules_file /etc/nginx/modsec.conf;
+                proxy_set_header Host            $host;
+{% if item.proxy_timeout is defined %}
+                proxy_read_timeout {{item.proxy_timeout}}s;
+{% endif %}
+{% if item.havp_protocol is defined %}
+                proxy_pass {{ item.havp_protocol }}://{{ item.havp_listening_ip }}:{{ item.havp_listening_port }}/;
+{% else %}
+{% if item.backend_protocol  == "https" %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.https_listening_port }}/;
+{% else %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.http_listening_port }}/;
+{% endif %}
+{% endif %}
+        }
+
+        ssl_certificate "{{v_certificates_path}}/{{ item.domain }}.crt";
+        ssl_certificate_key "{{v_certificates_path}}/{{ item.domain }}.key";
+        ssl_session_cache shared:SSL:1m;
+        ssl_session_timeout  10m;
+        ssl_ciphers HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers on;
+
+        error_page 404 /404.html;
+            location = /40x.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+        }
+    }
+
+    server {
+        listen       {{ item.http2_listening_ip }}:{{ item.http2_listening_port }};
+        server_name  {{ item.domain }}
+{% if item.alias is defined %}
+{% for _alias in item.alias %}
+                     {{ _alias }}
+{% endfor %}
+{% endif %}
+                     ;
+	access_log  "{{ v_log_path }}/nginx/{{ item.domain }}/{{ item.domain }}_http2_access.log" main;
+
+        location /nginx_status {
+          stub_status on;
+          access_log   off;
+          allow 127.0.0.1;
+          deny all;
+        }
+
+        location / {
+                modsecurity off;
+                proxy_set_header Host            $host;
+{% if item.backend_protocol  == "https" %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.https_listening_port }}/;
+{% else %}
+                proxy_pass {{ item.backend_protocol }}://{{ clb_mid_low_dns_name }}:{{ item.http_listening_port }}/;
+{% endif %}
+        }
+
+        location /mingtree/ {
+                modsecurity off;
+                proxy_set_header Host            $host;
+                proxy_pass https://{{ ec2_low_met_private_dns_names }}:{{ v_metrology_grafana_port }}/;
+        }
+
+        error_page 404 /404.html;
+            location = /40x.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+        }
+    }

@@ -1,0 +1,53 @@
+---
+
+- name: grafana  Retrieve accountable user organisations
+  uri:
+    url: "https://localhost:3000/api/users/{{ item.json.id }}/orgs"
+    method: GET
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    body: ""
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+    timeout: 5
+    validate_certs: no
+    retrieve_content: yes
+  when: not(
+          (accountable_users_grafana is undefined)
+          or
+          (accountable_users_grafana | length > 0)
+          or
+          (accountable_users_grafana is none)
+          or
+          (accountable_users_grafana | trim == '')
+        )
+  with_items:
+    - "{{ new_accountable_users_grafana }}"
+  notify: Enable and restart grafana systemd service
+  register: accountable_users_organisations
+
+- name: grafana Switch accountable user to its organisation
+  uri:
+    url: "https://localhost:3000/api/users/{{ item.item.json.id }}/using/{{ item.json[0].orgId }}"
+    method: POST
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    body: ""
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+    timeout: 5
+    validate_certs: no
+  when: not(
+          (accountable_users_organisations.results is undefined)
+          or
+          (accountable_users_organisations.results | length > 0)
+          or
+          (accountable_users_organisations is none)
+          or
+          (accountable_users_organisations | trim == "")
+        )
+  with_items:
+    - "{{ accountable_users_organisations.results }}"
+  notify: Enable and restart grafana systemd service

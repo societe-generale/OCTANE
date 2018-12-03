@@ -1,0 +1,26 @@
+global
+        log 127.0.0.1 local5 debug
+        chroot /var/lib/haproxy
+        user haproxy
+        group haproxy
+        daemon
+
+defaults
+        log     global
+        mode    tcp
+        option  dontlognull
+        timeout connect 5000
+        timeout client 30000
+        timeout server 30000
+        unique-id-format %{+X}o\ %ci:%cp_%fi:%fp_%Ts_%rt:%pid
+        log-format %ci:%cp\ [%t]\ %ft\ %b/%s\ %Tw/%Tc/%Tt\ %B\ %ts\ %ac/%fc/%bc/%sc/%rc\ %sq/%bq\ %ID
+
+listen stats
+  bind {{ v_haproxy_stats_listening_ip }}:{{ v_haproxy_stats_listening_port }}
+  mode http
+  stats enable
+  stats hide-version
+  http-request set-log-level silent
+  stats uri /{{ v_haproxy_stats_uri }}  # Stats URI
+
+{% include "haproxy_healthcheck_all_all.j2" %}

@@ -1,0 +1,50 @@
+---
+# Environmental variables
+vpn_public_server_fqdn: "vpn.your.domain" 
+# Network behind OpenVPN
+vpn_network: 10.0.0.0
+vpn_netmask: 255.0.0.0
+# VPN network used by OpenVPN to give address to client
+openvpn_server_network: 172.16.192.
+openvpn_server_netmask: 255.255.240.0
+openvpn_port: 443
+# defaults file for openvpn
+openvpn_base_dir: /etc/openvpn
+openvpn_key_dir: /etc/openvpn/keys
+openvpn_ccd_dir: /etc/openvpn/ccd
+openvpn_ovpn_dir: /etc/openvpn/ovpn
+openvpn_clients_dir: /etc/openvpn/clients
+openvpn_server_hostname: "{{ansible_default_ipv4.interface}}"
+openvpn_proto: tcp
+openvpn_dualstack: false
+openvpn_rsa_bits: 2048
+openvpn_service_name: openvpn
+openvpn_uninstall: false
+openvpn_use_pregenerated_dh_params: false
+openvpn_use_modern_tls: true
+openvpn_verify_cn: true
+openvpn_redirect_gateway: false
+openvpn_set_dns: false
+openvpn_enable_management: false
+openvpn_management_bind: /var/run/openvpn/management unix
+openvpn_management_client_user: root
+openvpn_x509_client_name_prefix: "{{ stack }}-Client-"
+openvpn_server_name: "{{ stack }}-Server"
+openvpn_ca_name: "{{ stack }}-CA"
+openvpn_ca_crt_name: "{{stack}}-ca.crt"
+openvpn_ca_key_name: "{{stack}}-ca.key"
+openvpn_ca_csr_name: "{{stack}}-ca-csr.key"
+openvpn_crl_name: "{{stack}}-ca-crl.pem"
+openvpn_ta_key_name: "{{stack}}-ta.key"
+openvpn_ca_validity_days: 3650
+openvpn_crl_validity_days: 3650
+tls_auth_required: true
+ci_build: false
+openvpn_push: [ "route {{ vpn_network }} {{ vpn_netmask }}" ] 
+manage_firewall_rules: true
+openvpn_client_register_dns: false
+openvpn_use_crl: true
+openvpn_duplicate_cn: false
+
+# LDAP configuration
+openvpn_use_ldap: false

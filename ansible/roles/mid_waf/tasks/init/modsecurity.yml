@@ -1,0 +1,54 @@
+---
+
+- name:  Add configuration files to nginx directory
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items:
+    - { src: "modsec.conf.j2", dest: "/etc/nginx/modsec.conf" }
+    - { src: "mingtreemodsec.conf.j2", dest: "/etc/nginx/mingtree_modsec.conf" }
+    - { src: "modsecurity.conf.j2", dest: "/etc/nginx/modsecurity.conf" }
+    - { src: "crs-setup.conf.j2", dest: "/etc/nginx/crs-setup.conf" }
+
+- name:  Install CRS modescurity from archive
+  unarchive:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    copy: yes
+  with_items:
+    - { src: "modsecurity.data.tar.gz", dest: "/etc/nginx/" }
+    - { src: "nginx.pm.tar.gz", dest: "/usr/local/lib64/" }
+
+- name:  Install modsecurity libraries with mod_security from archive
+  unarchive:
+    src: modsecurity.tar.gz
+    dest: "/usr/local"
+    copy: yes
+
+- name:  Install libraries needed for nginx and mod_security from archive
+  unarchive:
+    src: "{{ item }}"
+    dest: "/usr/lib64"
+    copy: yes
+  with_items:
+      - libyajl.tar.gz
+      - nginx.tar.gz
+
+- name:  Symlink modsecurity librairies
+  file:
+    src: "/usr/local/modsecurity/lib/{{ item }}"
+    dest: "/usr/lib64/{{ item }}"
+    owner: root
+    group: root
+    state: link
+  with_items:
+      - libmodsecurity.a
+      - libmodsecurity.la
+      - libmodsecurity.so
+      - libmodsecurity.so.3
+      - libmodsecurity.so.3.0.0
+

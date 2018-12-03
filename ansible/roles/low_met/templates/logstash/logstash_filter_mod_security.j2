@@ -1,0 +1,321 @@
+# Mod-Security configuration
+# Split sections
+  if [fields][log_type] == "mod_security" {
+    ruby {
+      code => "
+        if !event.get('message').nil?
+          modSecSectionData = event.get('message').split(/(?:-{2,3}[a-zA-Z0-9]{8}-{1,3}([A-Z])--)/)
+          modSecSectionData.shift
+          for i in 0..((modSecSectionData.length-1)/2)
+            sectionName = 'rawSection'.concat(modSecSectionData.shift)
+            sectionData = modSecSectionData.shift
+            sectionName = sectionName.strip
+            if !sectionData.nil?
+              sectionData = sectionData.strip
+            end
+          event.set(sectionName, sectionData)
+        end
+      end
+     "
+    }
+# Parse section A
+    grok {
+      match => {
+        "rawSectionA" => "\[(?<modsec_timestamp>%{MONTHDAY}/%{MONTH}/%{YEAR}:%{TIME} [-\+]{1,2}%{INT})\] %{DATA:uniqueId} %{IP:sourceIp} %{INT:sourcePort} %{IP:destIp} %{INT:destPort}"
+      }
+    }
+# Parse section B
+    if [rawSectionB] =~ /.+/ {
+      grok {
+        match => {
+          "rawSectionB" => [  "(?m)^%{DATA:httpMethod}\s(?<requestedUri>\S+)\s(?<incomingProtocol>[^\n]+)(?:\n(?<raw_requestHeaders>.+)?)?$",
+                              "(?<httpMethod>^(.*)$)" ]
+        }
+      }
+    }
+# Parse section B request headers
+    if [raw_requestHeaders] =~ /.+/ {
+      kv {
+        source => "raw_requestHeaders"
+        field_split => "\n"
+        value_split => ":"
+        target => "requestHeaders"
+      }
+      ruby {
+        code => "
+          requestHeaders = event.get('requestHeaders').to_hash
+          requestHeaders.each { |k, v|
+            if !v.nil? and v.is_a? String
+              requestHeaders[k] = v.strip
+            end
+          }
+        "
+      }
+    }
+# Parse section B cookies
+    if [requestHeaders][Cookie] =~ /.+/ {
+      kv {
+        source => "[requestHeaders][Cookie]"
+        field_split => "; "
+        value_split => "="
+        target => "requestCookies"
+      }
+    }
+# Parse section C
+    if [rawSectionC] =~ /.+/ {
+      mutate {
+        add_field => { "requestBody" => "%{rawSectionC}" }
+      }
+    }
+# Parse section F
+    if [rawSectionF] =~ /.+/ {
+      grok {
+        match => {
+          "rawSectionF" => ["(?m)^(?<serverProtocol>.+?)\s(?<responseStatus>[^\n]+)(\n(?<raw_responseHeaders>.+)?)?$"]
+        }
+      }
+    }
+# Parse section F headers
+    if [rawSectionF] =~ /(.+?)\s(.+)\n{1}/ {
+      grok {
+        match => {
+          "rawSectionF" => ".+?\n(?m)(?<raw_responseHeaders>.+)"
+        }
+      }
+    }
+# Parse section F raw response header
+    if [raw_responseHeaders] =~ /.+/ {
+      kv {
+        source => "raw_responseHeaders"
+        field_split => "\n"
+        value_split => ":"
+        target => "responseHeaders"
+      }
+      ruby {
+        code => "
+          responseHeaders = event.get('responseHeaders').to_hash
+          responseHeaders.each { |k, v|
+            if !v.nil? and v.is_a? String
+              responseHeaders[k] = v.strip
+            end
+          }
+        "
+      }
+    }
+# Parse section H.
+# Audit messages
+    if [rawSectionH] =~ /.+/ {
+      # build the auditlog trailer messages
+      ruby {
+        code => "
+          def extractVal(pattern, fromString, storeResultIn, underKeyName, multiValues=false)
+            if multiValues
+              result = fromString.scan(pattern)
+              if !result.empty?
+                storeResultIn[underKeyName] = result.flatten
+              end
+            else
+              result = pattern.match(fromString)
+              if !result.nil?
+                storeResultIn[underKeyName] = result[1]
+              end
+            end
+          end
+
+          auditLogTrailerMessages = Array.new()
+          trailer_array = event.get('rawSectionH').split(/\n/)
+          trailer_array.each do |entry|
+          if entry.match(/^Message: |^ModSecurity: /)
+            msg = Hash.new()
+            extractVal(/ModSecurity: (.+)(?:\[file)/, entry, msg, 'info')
+            extractVal(/Message: (.+)(?:\[file)/, entry, msg, 'info') if msg['info'].nil?
+            extractVal(/Message: (.+)/, entry, msg, 'info') if msg['info'].nil?
+            extractVal(/\[file \"(.*?)\"\]/, entry, msg, 'rulefile')
+            extractVal(/\[line \"(.*?)\"\]/, entry, msg, 'ruleline')
+            extractVal(/\[id \"(.*?)\"\]/, entry, msg, 'ruleid')
+            extractVal(/\[ver \"(.*?)\"\]/, entry, msg, 'ruleversion')
+            extractVal(/\[rev \"(.*?)\"\]/, entry, msg, 'rulerevision')
+            extractVal(/\[msg \"(.*?)\"\]/, entry, msg, 'msg')
+            extractVal(/\[severity \"(.*?)\"\]/, entry, msg, 'severity')
+            extractVal(/\[maturity \"(.*?)\"\]/, entry, msg, 'maturity')
+            extractVal(/\[accuracy \"(.*?)\"\]/, entry, msg, 'accuracy')
+            extractVal(/\[data \"(.*?)\"\]/, entry, msg, 'data')
+            extractVal(/\[tag \"(.*?)\"\]/, entry, msg, 'tag', true)
+            extractVal(/\[tag \"attack-(.*?)\"\]/, entry, msg, 'attacktype', true)
+            auditLogTrailerMessages.push(msg.select { |_, value| !value.nil? && !value.empty? })
+          end
+        end
+
+            event.set('auditLogTrailerMessages', auditLogTrailerMessages)
+          "
+      }
+    }
+# Convert section H into a key/value map
+    if [rawSectionH] =~ /.+/ {
+      kv {
+        source => "rawSectionH"
+        field_split => "\n"
+        value_split => ":"
+        target => "auditLogTrailer"
+      }
+      ruby {
+        code => "
+            auditLogTrailer = event.get('auditLogTrailer').to_hash
+            auditLogTrailerMessages = event.get('auditLogTrailerMessages')
+            auditLogTrailer.each { |k, v|
+              if !v.nil? and v.is_a? String
+                auditLogTrailer[k] = v.strip
+              end
+            }
+            auditLogTrailer.delete('Message')
+            auditLogTrailer.delete('ModSecurity')
+            auditLogTrailer['messages'] = auditLogTrailerMessages
+
+            event.set('auditLogTrailer', auditLogTrailer)
+          "
+      }
+
+      mutate {
+        remove_field => ['auditLogTrailerMessages']
+      }
+    }
+# Parse section K match rules
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Convert section K into an array
+    # and rename it to "matchedRules"
+    # also create an array of just the
+    # secRuleIds that were located in
+    # sectionK
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if [rawSectionK] =~ /.+/ {
+      mutate {
+        gsub => [ "rawSectionK", "\n", "~" ]
+        split => [ "rawSectionK" , "~" ]
+      }
+
+      mutate {
+        rename => [ "rawSectionK", "matchedRules"]
+      }
+
+      ruby {
+        code => "
+            secRuleIds = Array.new()
+            matchedRules_array = event.get('matchedRules').to_hash
+            matchedRules_array.each do |entry|
+              if entry.match(/^SecRule /) and entry.match(/,id:/)
+                secRuleIds.push(/,id:(?<ruleId>\d+)/.match(entry)[:ruleId])
+              end
+            end
+            event.set('secRuleIds', secRuleIds)
+          "
+      }
+    }
+
+  if "_grokparsefailure" not in [tags] {
+    grok {
+      match => {"responseStatus" => "%{INT:responseCode}( %{GREEDYDATA:responseCodeString})?"}
+    }
+
+    ruby {
+      code => "
+          context = {
+            'ip' => event.get('sourceIp'),
+            'http' => {
+              'version' => event.get('serverProtocol'),
+              'type' => event.get('httpMethod'),
+              'acceptMedia' => event.get('requestHeaders')['Accept'],
+              'acceptEncoding' => event.get('requestHeaders')['Accept-Encoding'],
+              'acceptLanguage' => event.get('requestHeaders')['Accept-Language'],
+              'userAgent' => event.get('requestHeaders')['User-Agent']
+            }.select { |_, value| !value.nil? && !value.empty? }
+          }.select { |_, value| !value.nil? && !value.empty? }
+
+          endpoint = {
+            'address' => event.get('destIp'),
+            'name' => event.get('@metadata')['name'] || event.get('requestHeaders')['Host'],
+            'port' => event.get('destPort'),
+            'uri' => event.get('requestedUri'),
+            'http' => {
+              'code' => event.get('responseCode'),
+              'codeString' => event.get('responseCodeString')
+            }.select { |_, value| !value.nil? && !value.empty? }
+          }.select { |_, value| !value.nil? && !value.empty? }
+
+          input = {
+            'requestBody' => event.get('requestBody'),
+            'cookie' => event.get('requestCookies')
+          }.select { |_, value| !value.nil? && !value.empty? }
+
+          event.set('[data][endpoint]', endpoint)
+          event.set('[data][context]', context)
+          event.set('[data][input]', input)
+        "
+    }
+
+    date {
+      match => ["modsec_timestamp", "dd/MMM/yyyy:HH:mm:ss Z"]
+      target => "@timestamp"
+    }
+
+    date {
+      match => ["modsec_timestamp", "dd/MMM/yyyy:HH:mm:ss Z"]
+      target => '[data][endpoint][localtime]'
+    }
+
+    if [rawSectionH] =~ /.+/ {
+      ruby {
+        code => "
+            detections = Array.new()
+            auditLogTrailer = event.get('auditLogTrailer')
+            modsec = auditLogTrailer.except('messages')
+            event.set('[data][endpoint][mod_security]', modsec) unless modsec.empty?
+
+            auditLogTrailer['messages'].each do |entry|
+              scaledSeverity = 0
+              case entry['severity']
+              when 'CRITICAL'
+                scaledSeverity = 1
+              when 'ERROR'
+                scaledSeverity = 0.8
+              when 'WARNING'
+                scaledSeverity = 0.6
+              when 'NOTICE'
+                scaledSeverity = 0.2
+              end
+              certainty = entry['accuracy'].to_f / 10
+              parsedInput = /ARGS:(.*?):\s*(.*)/.match(entry['data'])
+              parsedMsg = /(Inbound Anomaly Score Exceeded)\s(.*)/.match(entry['msg'])
+              description = Array.new([entry['info']])
+              description.push(parsedMsg[2]) if !parsedMsg.nil?
+              description.push(' | ' + entry['data']) if !entry['data'].nil?
+              description.push(' | RuleSet: ' + (entry['ruleversion'] + 'v' + entry['rulerevision'])) if !entry['ruleversion'].nil?
+              description.push(' | RuleId: ' + entry['ruleid'] + ' at ' + entry['rulefile'] + ':', entry['ruleline']) if !entry['ruleid'].nil?
+              description = description.reject{ |s| s.nil? || s.empty? }.join('').squeeze(' ')
+              detections.push(
+              {
+                'ids' => 'ModSecurity',
+                'name' => !parsedMsg.nil? ? parsedMsg[1] : !entry['msg'].nil? ? entry['msg'] : entry['info'],
+                'description' => description,
+                'severity' => scaledSeverity,
+                'certainty' => certainty,
+                'tags' => entry['tag'],
+                'type' => entry['attacktype'],
+                'input' => parsedInput.nil? ? nil : [ parsedInput[1] ], # Workaround for inputs (to be removed), see common/libs#3
+                'onKey' => parsedInput.nil? ? nil : parsedInput[1],
+                'byInput' => parsedInput.nil? ? nil : parsedInput[2],
+                'generatedby' => 'MODSECURITY'
+              }.select { |_, value| !value.nil? })
+
+              # Workaround for inputs (to be updated), see common/libs#3
+              event.set('[data][input]', event.get('[data][input]').merge({ parsedInput[1] => parsedInput[2] })) unless parsedInput.nil?
+            end
+            event.set('[data][detections]', detections)
+          "
+      }
+    }
+  
+    ruby {
+      code => "
+        "
+    }
+  }

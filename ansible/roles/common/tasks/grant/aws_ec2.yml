@@ -1,0 +1,22 @@
+---
+
+- name: Gather facts about metering instances
+  become: false
+  run_once: true
+  local_action:
+    module: ec2_instance_facts
+    region: "{{ v_region }}"
+    filters:
+       "tag:aws:cloudformation:stack-name": "{{ stack }}"
+       "tag:fonction": "met"
+       "tag:stage": "low"
+       "instance-state-code": [ "16" ]
+  register: ec2_low_met
+
+- name: Retrieve informations about metering instances
+  set_fact:
+    ec2_low_met_ips: "{{item.private_ip_address}}"
+    ec2_low_met_private_dns_names: "{{item.private_dns_name}}"
+  with_items:
+    - "{{ ec2_low_met.instances }}"
+

@@ -1,0 +1,37 @@
+client
+
+tls-client
+auth SHA256
+cipher AES-256-CBC
+remote-cert-tls server
+{% if openvpn_use_modern_tls %}
+tls-version-min 1.2
+{% endif %}
+
+proto {{openvpn_proto}}
+remote {{openvpn_server_hostname}} {{openvpn_port}}
+dev tun
+
+resolv-retry 5
+nobind
+keepalive 5 30
+comp-lzo
+persist-key
+persist-tun
+verb 3
+
+route-method exe
+route-delay 2
+{% if openvpn_client_register_dns %}
+register-dns
+{% endif %}
+
+key-direction 1
+ca keys/{{ openvpn_ca_crt_name }}
+tls-auth keys/{{ openvpn_ta_key_name }} 1
+cert keys/{{stack }}-{{ item.email }}.crt
+key keys/{{ stack }}-{{ item.email }}.key
+
+{% if openvpn_verify_cn|bool %}
+verify-x509-name {{ stack }}-Server-{{inventory_hostname[:49]}} name
+{% endif %}

@@ -1,0 +1,13 @@
+---
+
+- name:  Install telegraf config file
+  template:
+    src: "grant/telegraf_conf.j2"
+    dest: "/etc/telegraf/telegraf.conf"
+    owner: root
+    backup: yes
+    group: root
+    mode: 0644
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Restart telegraf daemon

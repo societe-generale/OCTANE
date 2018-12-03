@@ -1,0 +1,69 @@
+---
+# tasks file for openvpn
+- name: Include granted clients
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "grant_clients_{{ stack }}.yml" 
+      skip: true
+  tags:
+    - init
+    - grantvpnclient
+    - revokevpnclient
+    - mid_vpn
+
+- name: Include revoked clients
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files: 
+        - "revoke_clients_{{ stack }}.yml"
+      skip: true
+  tags:
+    - init
+    - grantvpnclient
+    - revokevpnclient
+    - mid_vpn
+
+- name: Include granted VPN streams
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files: 
+        - "granted_vpn_streams_{{ stack }}.yml"
+      skip: true
+  tags:
+    - init
+    - grantvpnclient
+    - revokevpnclient
+    - mid_vpn
+
+- import_tasks: init/softwares.yml
+  tags:
+    - init
+    - mid_vpn
+
+- import_tasks: init/openvpn.yml
+  tags:
+    - init
+    - mid_vpn
+
+- import_tasks: init/iptables.yml
+  tags:
+    - init
+    - mid_vpn
+
+- import_tasks: grant/iptables.yml
+  tags:
+    - grantvpnclient
+    - revokevpnclient
+    - mid_vpn
+
+- import_tasks: grant/clients.yml
+  tags:
+    - grantvpnclient
+    - mid_vpn
+
+- import_tasks: revoke/clients.yml
+  tags:
+    - revokevpnclient
+    - mid_vpn
+

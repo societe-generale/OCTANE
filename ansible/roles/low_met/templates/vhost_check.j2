@@ -1,0 +1,4 @@
+<VirtualHost *:80>
+    ServerName {{ granted_domains[0].domain }}
+    DocumentRoot /var/www/{{ granted_domains[0].domain }}/
+</VirtualHost>

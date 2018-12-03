@@ -1,0 +1,32 @@
+---
+
+- name: remove client config
+  file:
+    path: "{{ openvpn_ovpn_dir }}/{{ stack }}-{{item.email}}.ovpn"
+    state: absent
+    force: yes
+  with_items: 
+    - "{{ openvpn_revoke_these_clients }}"
+
+- name: revoke certificates
+  command: sh revoke.sh {{ stack }}-{{ item.email }}.crt
+  args:
+    chdir: "{{ openvpn_key_dir }}"
+  with_items: 
+    - "{{ openvpn_revoke_these_clients }}"
+
+- name: remove client key
+  file:
+    path: "{{ openvpn_key_dir }}/{{ stack }}-{{ item.email }}.key"
+    state: absent
+    force: yes
+  with_items: 
+    - "{{ openvpn_revoke_these_clients }}"
+
+- name: remove client csr
+  file:
+    path: "{{ openvpn_key_dir }}/{{ stack }}-{{ item.email }}.csr"
+    state: absent
+    force: yes
+  with_items: 
+    - "{{ openvpn_revoke_these_clients }}"

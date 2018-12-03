@@ -1,0 +1,26 @@
+# Iptables configuration
+  if [fields][log_type] == "iptables_access" {
+     grok {
+          match => [ "message" , "%{SYSLOGTIMESTAMP:timestamp} %{DATA:source} kernel: IN %{IPORHOST:domain}:%{INT:port} IN=eth0 OUT= MAC=%{DATA:mac} SRC=%{IPORHOST:sourceip} DST=%{IPORHOST:destip} LEN=%{INT:length} TOS=%{DATA:tos} PREC=%{DATA:prec} TTL=%{DATA:ttl} ID=%{DATA:id} %{DATA:inconnu} PROTO=%{DATA:protocole} SPT=%{DATA:sourceport} DPT=%{DATA:destport} %{GREEDYDATA:data}" ]
+           add_field => [ "az", "%{[fields][az]}" ]
+           add_field => [ "ciap", "%{[fields][ciap]}" ]
+           add_field => [ "bl", "%{[fields][bl]}" ]
+           add_field => [ "env", "%{[fields][env]}" ]
+           add_field => [ "fonction", "%{[fields][fonction]}" ]
+           add_field => [ "region", "%{[fields][region]}" ]
+           add_field => [ "stage", "%{[fields][stage]}" ]
+           add_field => [ "hostname", "%{[fields][hostname]}" ]
+           add_field => [ "genre", "%{[fields][genre]}" ]
+     }
+
+     mutate {
+       copy => { "[metrics][tags][domain]" => "database" }
+     }
+
+     mutate {
+       gsub => [
+             "database", "\.", "_"
+       ]
+     }
+  }
+

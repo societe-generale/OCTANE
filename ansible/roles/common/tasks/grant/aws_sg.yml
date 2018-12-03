@@ -1,0 +1,538 @@
+---
+
+- name:  Gather facts about {{ v_sg_up }} security group
+  become: false
+  run_once: true
+  local_action:
+    module: ec2_group_facts
+    region: "{{ v_region }}"
+    filters:
+       "tag:aws:cloudformation:logical-id": "{{ v_sg_up }}"
+       "tag:aws:cloudformation:stack-name": "{{ stack }}"
+  register: ec2_group_facts_up
+
+- name:  Gather facts about {{ v_sg_mid }} security group
+  become: false
+  run_once: true
+  local_action:
+    module: ec2_group_facts
+    region: "{{ v_region }}"
+    filters:
+       "tag:aws:cloudformation:logical-id": "{{ v_sg_mid }}"
+       "tag:aws:cloudformation:stack-name": "{{ stack }}"
+  register: ec2_group_facts_mid
+
+- name:  Gather facts about {{ v_sg_up_vpn }} security group
+  become: false
+  run_once: true
+  local_action:
+    module: ec2_group_facts
+    region: "{{ v_region }}"
+    filters:
+       "tag:aws:cloudformation:logical-id": "{{ v_sg_up_vpn }}"
+       "tag:aws:cloudformation:stack-name": "{{ stack }}"
+  register: ec2_group_facts_up_vpn
+  tags:
+    - init
+
+- name:  Gather facts about {{ v_sg_low }}
+  become: false
+  run_once: true
+  local_action:
+    module: ec2_group_facts
+    region: "{{ v_region }}"
+    filters:
+       "tag:aws:cloudformation:logical-id": "{{ v_sg_low }}"
+       "tag:aws:cloudformation:stack-name": "{{ stack }}"
+  register: ec2_group_facts_low
+
+- name:  Gather facts about {{ v_sg_vpn }} security group
+  become: false
+  run_once: true
+  local_action:
+    module: ec2_group_facts
+    region: "{{ v_region }}"
+    filters:
+       "tag:aws:cloudformation:logical-id": "{{ v_sg_vpn }}"
+       "tag:aws:cloudformation:stack-name": "{{ stack }}"
+  register: ec2_group_facts_vpn
+  tags:
+    - init
+
+- name:  Gather facts about {{ v_sg_met }}
+  become: false
+  run_once: true
+  local_action:
+    module: ec2_group_facts
+    region: "{{ v_region }}"
+    filters:
+       "tag:aws:cloudformation:logical-id": "{{ v_sg_met }}"
+       "tag:aws:cloudformation:stack-name": "{{ stack }}"
+  register: ec2_group_facts_met
+  tags:
+    - init
+
+- name:  Retrieve informations about {{ v_sg_up }} security group
+  run_once: true
+  set_fact:
+    sg_up_group_name: "{{ item.group_name }}"
+    sg_up_description: "{{ item.description }}"
+    sg_up_ip_permissions: "{{ item.ip_permissions }}"
+    sg_up_ip_permissions_egress: "{{ item.ip_permissions_egress }}"
+  with_items: "{{ ec2_group_facts_up.security_groups }}"
+
+- name:  Retrieve informations about {{ v_sg_mid }} security group
+  run_once: true
+  set_fact:
+    sg_mid_group_name: "{{ item.group_name }}"
+    sg_mid_description: "{{ item.description }}"
+    sg_mid_ip_permissions: "{{ item.ip_permissions }}"
+    sg_mid_ip_permissions_egress: "{{ item.ip_permissions_egress }}"
+  with_items: "{{ ec2_group_facts_mid.security_groups }}"
+
+- name:  Retrieve informations about {{ v_sg_up_vpn }} security group
+  run_once: true
+  set_fact:
+    sg_up_vpn_group_name: "{{ item.group_name }}"
+    sg_up_vpn_description: "{{ item.description }}"
+    sg_up_vpn_ip_permissions: "{{ item.ip_permissions }}"
+    sg_up_vpn_ip_permissions_egress: "{{ item.ip_permissions_egress }}"
+  with_items: "{{ ec2_group_facts_up_vpn.security_groups }}"
+  tags:
+    - init
+
+- name:  Retrieve informations about {{ v_sg_vpn }} security group
+  run_once: true
+  set_fact:
+    sg_vpn_group_name: "{{ item.group_name }}"
+    sg_vpn_description: "{{ item.description }}"
+    sg_vpn_ip_permissions: "{{ item.ip_permissions }}"
+    sg_vpn_ip_permissions_egress: "{{ item.ip_permissions_egress }}"
+  with_items: "{{ ec2_group_facts_vpn.security_groups }}"
+  tags:
+    - init
+
+- name:  Retrieve informations about {{ v_sg_low }} security group
+  run_once: true
+  set_fact:
+    sg_low_group_name: "{{ item.group_name }}"
+    sg_low_description: "{{ item.description }}"
+    sg_low_ip_permissions: "{{ item.ip_permissions }}"
+    sg_low_ip_permissions_egress: "{{ item.ip_permissions_egress }}"
+  with_items: "{{ ec2_group_facts_low.security_groups }}"
+
+- name:  Retrieve informations about {{ v_sg_met }} security group
+  run_once: true
+  set_fact:
+    sg_met_group_name: "{{ item.group_name }}"
+    sg_met_description: "{{ item.description }}"
+    sg_met_ip_permissions: "{{ item.ip_permissions }}"
+    sg_met_ip_permissions_egress: "{{ item.ip_permissions_egress }}"
+  with_items: "{{ ec2_group_facts_met.security_groups }}"
+  tags:
+    - init
+
+- name:  Remove existing rules from {{ v_sg_up }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_up_group_name }}"
+    description: "{{ sg_up_description }}"
+    region: "{{ v_region }}"
+    purge_rules: yes
+    purge_rules_egress: yes
+    purge_tags: no
+    rules:
+  when: "v_healthcheck_port not in ( sg_up_ip_permissions | map(attribute='from_port') )"
+  tags:
+    - init
+
+- name:  Add rules to {{ v_sg_up }} security group for granted domains (if needed)
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_up_group_name }}"
+    description: "{{ sg_up_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ item.http_listening_port }}"
+        to_port: "{{ item.http_listening_port }}"
+        cidr_ip: "{{ sg_up_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+      - proto : tcp
+        from_port: "{{ item.https_listening_port }}"
+        to_port: "{{ item.https_listening_port }}"
+        cidr_ip: "{{ sg_up_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ item.http_listening_port }}"
+        to_port: "{{ item.http_listening_port }}"
+        cidr_ip: "{{ sg_up_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+      - proto : tcp
+        from_port: "{{ item.https_listening_port }}"
+        to_port: "{{ item.https_listening_port }}"
+        cidr_ip: "{{ sg_up_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+  with_items: "{{ granted_domains }}"
+  tags:
+    - grantdomain
+
+- name:  Add healthcheck settings on {{ v_sg_up }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_up_group_name }}"
+    description: "{{ sg_up_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_up_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_up_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+
+- name:  Add http/https settings on {{ v_sg_up }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_up_group_name }}"
+    description: "{{ sg_up_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ item }}"
+        to_port: "{{ item }}"
+        cidr_ip: "0.0.0.0/0"
+        rule_desc: "HTTP protocol"
+  with_items: 
+    - "80"
+    - "443"
+
+- name:  Remove existing rules from {{ v_sg_mid }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_mid_group_name }}"
+    description: "{{ sg_mid_description }}"
+    region: "{{ v_region }}"
+    purge_rules: yes
+    purge_rules_egress: yes
+    purge_tags: no
+    rules:
+  when: "v_healthcheck_port not in ( sg_mid_ip_permissions | map(attribute='from_port') )"
+  tags:
+    - init
+
+- name:  Add settings to {{ v_sg_mid }} security group for granted domains (if needed)
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_mid_group_name }}"
+    description: "{{ sg_mid_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ item.http_listening_port }}"
+        to_port: "{{ item.http_listening_port }}"
+        cidr_ip: "{{ sg_mid_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+      - proto : tcp
+        from_port: "{{ item.https_listening_port }}"
+        to_port: "{{ item.https_listening_port }}"
+        cidr_ip: "{{ sg_mid_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ item.http_listening_port }}"
+        to_port: "{{ item.http_listening_port }}"
+        cidr_ip: "{{ sg_mid_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+      - proto : tcp
+        from_port: "{{ item.https_listening_port }}"
+        to_port: "{{ item.https_listening_port }}"
+        cidr_ip: "{{ sg_mid_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+  with_items: "{{ granted_domains }}"
+  tags:
+    - grantdomain
+
+- name:  Add healthcheck settings on {{ v_sg_mid }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_mid_group_name }}"
+    description: "{{ sg_mid_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_mid_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_mid_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+
+- name:  Add mingtree settings on {{ v_sg_mid }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_mid_group_name }}"
+    description: "{{ sg_mid_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ v_mingtree_port }}"
+        to_port: "{{ v_mingtree_port }}"
+        cidr_ip: "{{ sg_mid_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "Mingtree"
+
+- name:  Change settings of {{ v_sg_up_vpn }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_up_vpn_group_name }}"
+    description: "{{ sg_up_vpn_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ item }}"
+        to_port: "{{ item }}"
+        cidr_ip: "{{ sg_up_vpn_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "VPN"
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ item }}"
+        to_port: "{{ item }}"
+        cidr_ip: "{{ sg_up_vpn_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "VPN"
+  with_items: 
+      - "{{ v_vpn_port }}"
+  tags:
+    - init
+
+- name:  Add healthcheck settings on {{ v_sg_up_vpn }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_up_vpn_group_name }}"
+    description: "{{ sg_up_vpn_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_up_vpn_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_up_vpn_ip_permissions_egress[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+  tags:
+    - init
+
+- name:  Change settings of {{ v_sg_vpn }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_vpn_group_name }}"
+    description: "{{ sg_vpn_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ item }}"
+        to_port: "{{ item }}"
+        cidr_ip: "{{ sg_vpn_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "VPN"
+  with_items: 
+      - "{{ v_vpn_port }}"
+  tags:
+    - init
+
+- name:  Add healthcheck settings on {{ v_sg_vpn }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_vpn_group_name }}"
+    description: "{{ sg_vpn_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_vpn_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+  tags:
+    - init
+
+- name:  Remove existing rules from {{ v_sg_low }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_low_group_name }}"
+    description: "{{ sg_low_description }}"
+    region: "{{ v_region }}"
+    purge_rules: yes
+    purge_rules_egress: yes
+    purge_tags: no
+    rules:
+  when: "v_healthcheck_port not in ( sg_low_ip_permissions | map(attribute='from_port') )"
+  tags:
+    - init
+
+- name:  Add settings to {{ v_sg_low }} group for granted domains (if needed)
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_low_group_name }}"
+    description: "{{ sg_low_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto: tcp
+        from_port: "{{ item.http_listening_port }}"
+        to_port: "{{ item.http_listening_port }}"
+        cidr_ip: "{{ sg_low_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+      - proto: tcp
+        from_port: "{{ item.https_listening_port }}"
+        to_port: "{{ item.https_listening_port }}"
+        cidr_ip: "{{ sg_low_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "{{ item.domain }}"
+    rules_egress:
+      - proto : tcp
+        from_port: "0"
+        to_port: "65535"
+        cidr_ip: "0.0.0.0/0"
+        rule_desc: "backends"
+  with_items: "{{ granted_domains }}"
+  tags:
+    - grantdomain
+
+- name:  Add healthcheck settings of {{ v_sg_low }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_low_group_name }}"
+    description: "{{ sg_low_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto : tcp
+        from_port: "{{ v_healthcheck_port }}"
+        to_port: "{{ v_healthcheck_port }}"
+        cidr_ip: "{{ sg_low_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "healthcheck"
+
+- name:  Remove existing rules from {{ v_sg_met }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_met_group_name }}"
+    description: "{{ sg_met_description }}"
+    region: "{{ v_region }}"
+    purge_rules: yes
+    purge_rules_egress: yes
+    purge_tags: no
+    rules:
+  when: "80 not in ( sg_met_ip_permissions | map(attribute='from_port') )"
+  tags:
+    - init
+
+- name:  Change settings of {{ v_sg_met }} security group
+  run_once: true
+  become: false
+  local_action:
+    module: ec2_group
+    name: "{{ sg_met_group_name }}"
+    description: "{{ sg_met_description }}"
+    region: "{{ v_region }}"
+    purge_rules: no
+    purge_rules_egress: no
+    purge_tags: no
+    rules:
+      - proto: tcp
+        from_port: "{{ item }}"
+        to_port: "{{ item }}"
+        cidr_ip: "{{ sg_met_ip_permissions[0].ip_ranges[0].cidr_ip }}"
+        rule_desc: "Metrology input"
+    rules_egress:
+      - proto : tcp
+        from_port: "{{ item }}"
+        to_port: "{{ item }}"
+        cidr_ip: "{{ ec2_low_met_ips }}/32"
+        rule_desc: "Metrology server"
+  with_items: 
+      - "{{ v_metrology_influxdb_port }}"
+      - "{{ v_metrology_tcp_socket_port }}"
+      - "{{ v_metrology_logstash_port }}"
+      - "{{ v_mingtree_port }}"
+      - "80"
+      - "443"
+      - "22"
+  tags:
+    - init

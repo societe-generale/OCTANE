@@ -1,0 +1,18 @@
+filter {
+{% include "logstash_filter_haproxy_access.j2" %}
+else
+{% include "logstash_filter_havp_access.j2" %}
+else
+{% include "logstash_filter_iptables_access.j2" %}
+else
+{% include "logstash_filter_nginx_access.j2" %}
+else
+{% include "logstash_filter_suricata.j2" %}
+else
+{% include "logstash_filter_telegraf_json.j2" %}
+else
+{% include "logstash_filter_vpn.j2" %}
+#else
+{# include "logstash_filter_mod_security.j2" #}
+
+}

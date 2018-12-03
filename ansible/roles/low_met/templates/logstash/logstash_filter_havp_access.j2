@@ -1,0 +1,43 @@
+# HAVP configuration
+  if [fields][log_type] == "havp_access" {
+     grok {
+        match => { "message" => "%{DATESTAMP:timestamp} %{IPORHOST:clientip} %{WORD:method} %{INT:status} http://%{IPORHOST:domain}(?:\:%{INT:port}|)/(?:%{DATA:url}|) %{INT:header_size}\+%{INT:body_size} %{GREEDYDATA:virus}" }
+           add_field => [ "az", "%{[fields][az]}" ]
+           add_field => [ "ciap", "%{[fields][ciap]}" ]
+           add_field => [ "bl", "%{[fields][bl]}" ]
+           add_field => [ "env", "%{[fields][env]}" ]
+           add_field => [ "fonction", "%{[fields][fonction]}" ]
+           add_field => [ "region", "%{[fields][region]}" ]
+           add_field => [ "stage", "%{[fields][stage]}" ]
+           add_field => [ "hostname", "%{[fields][hostname]}" ]
+           add_field => [ "genre", "%{[fields][genre]}" ]
+     }
+
+     if [url] == "" {
+        mutate {
+                add_field => { "url" => "/" }
+        }
+     }
+
+     if ! [url] {
+        mutate {
+                add_field => { "url" => "/" }
+        }
+     }
+
+      mutate {
+        copy => { "[domain]" => "database" }
+      }
+
+      mutate {
+        gsub => [
+              "database", "\.", "_"
+        ]
+      }
+
+      date {
+        match => [ "timestamp" , "dd/MM/yyyy HH:mm:ss" ]
+        target => "@timestamp"
+      }
+   }
+

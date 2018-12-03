@@ -1,0 +1,28 @@
+---
+
+- name:  Install grafana dasboards config file (1 per organization)
+  template:
+    src: "grafana/dashboards_ciap_octane_yaml.j2"
+    dest: "/etc/grafana/provisioning/dashboards/ciap-octane-{{ item.name }}-{{ item.id }}.yaml"
+    owner: root
+    backup: yes
+    group: grafana
+    mode: 0640
+  with_items:
+    - "{{ all_orgs_grafana.json }}"
+  when: item.name != "Main Org."
+  notify: Enable and restart grafana systemd service
+
+- name: Populate cIAP grafana dashboards
+  template:
+    src: "grafana/dashboards/ciap_{{ item[1] }}_json.j2"
+    dest: "/etc/grafana/provisioning/dashboards/{{ item[0].name }}-{{ item[0].id }}/ciap_{{ item[1] }}.json"
+    owner: root
+    backup: no
+    group: grafana
+    mode: 0640
+  with_nested:
+    - "{{ all_orgs_grafana.json }}"
+    - [ "octane_helicopter_view", "octane_low_stage", "octane_mid_stage", "octane_suricata_details", "octane_up_stage" ]
+  when: item[0].name != "Main Org."
+  notify: Enable and restart grafana systemd service

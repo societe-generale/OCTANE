@@ -1,0 +1,87 @@
+---
+
+- name: Add granted domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "granted_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - init
+    - grantdomain
+    - low_met
+
+- name: Add revoked domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "revoked_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - revokedomain
+    - low_met
+
+- import_tasks: init/ssl.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/softwares.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/rsyslog.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/haproxy.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/selinux.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/logstash.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/influxdb.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/grafana.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: init/demo.yml
+  tags:
+    - init
+    - low_met
+
+- import_tasks: grant/logstash.yml
+  tags:
+    - grantdomain
+    - low_met
+
+- import_tasks: grafana/grant_organisation.yml
+  tags:
+    - grantdomain
+    - low_met
+
+- import_tasks: revoke/logstash.yml
+  tags:
+    - revokedomain
+    - low_met
+
+- import_tasks: grafana/revoke_organisation.yml
+  tags:
+    - revokedomain
+    - low_met

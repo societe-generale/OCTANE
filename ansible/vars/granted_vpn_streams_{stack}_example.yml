@@ -1,0 +1,5 @@
+granted_vpn_streams:
+  - stream: "22"
+  - stream: "80"
+  - stream: "443"
+  - stream: "3389"

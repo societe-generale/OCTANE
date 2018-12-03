@@ -1,0 +1,49 @@
+output {
+  if [database] == "{{ item[0].domain | replace('.', '_') }}" {
+    if [metrics][name] == "nginx" {
+      influxdb {
+         host => "{{ v_metrology_influxdb_host }}"
+         user => "{{ v_metrology_influxdb_user }}"
+         password => "{{ v_metrology_influxdb_password }}"
+         port => 8086
+         data_points => {
+             "domain" => "%{[metrics][tags][domain]}"
+             "port" => "%{[metrics][tags][port]}"
+             "server" => "%{[metrics][tags][server]}"
+             "accepts" => "%{[metrics][fields][accepts]}"
+             "active" => "%{[metrics][fields][active]}"
+             "handled" => "%{[metrics][fields][handled]}"
+             "reading" => "%{[metrics][fields][reading]}"
+             "requests" => "%{[metrics][fields][requests]}"
+             "waiting" => "%{[metrics][fields][waiting]}"
+             "writing" => "%{[metrics][fields][writing]}"
+             "az" => "%{[metrics][tags][az]}"
+             "bl" => "%{[metrics][tags][bl]}"
+             "ciap" => "%{[metrics][tags][ciap]}"
+             "component" => "%{[metrics][tags][component]}"
+             "env" => "%{[metrics][tags][env]}"
+             "fonction" => "%{[metrics][tags][fonction]}"
+             "hostname" => "%{[metrics][tags][host]}"
+             "region" => "%{[metrics][tags][region]}"
+             "stage" => "%{[metrics][tags][stage]}"
+         }
+         coerce_values => {
+             "port" => "integer"
+             "accepts" => "integer"
+             "active" => "integer"
+             "handled" => "integer"
+             "reading" => "integer"
+             "waiting" => "integer"
+             "writing" => "integer"
+         }
+         measurement => "nginx"
+         use_event_fields_for_data_points => false
+         allow_time_override => true
+         time_precision => "ms"
+         send_as_tags => [ "domain", "az", "bl", "component", "hostname", "ciap", "env", "fonction", "region", "stage", "port", "server"]
+         db => "{{ item[0].domain | replace('.', '_') }}"
+         ssl => true
+      }
+    }
+  }
+}

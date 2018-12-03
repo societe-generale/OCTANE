@@ -1,0 +1,114 @@
+---
+
+- name:  Create configuration HAVP directories for each domain
+  file:
+      path: "{{ v_havp_root_directory }}/{{ item.domain }}"
+      state: directory
+      mode: 0755
+  with_items: 
+    - "{{ granted_domains }}"
+
+- name:  Create bin HAVP directories for each domain
+  file:
+      path: "{{ v_havp_root_directory }}/{{ item.domain }}/sbin"
+      state: directory
+      mode: 0755
+  with_items: 
+    - "{{ granted_domains }}"
+
+- name:  Create etc HAVP directories for each domain
+  file:
+      path: "{{ v_havp_root_directory }}/{{ item.domain }}/etc"
+      state: directory
+      mode: 0755
+  with_items: 
+    - "{{ granted_domains }}"
+
+- name:  Create log HAVP directories for each domain
+  file:
+      path: "{{ v_log_path }}/havp/{{ item.domain }}/"
+      state: directory
+      owner: clamscan
+      group: clamscan
+      mode: 0755
+  with_items: 
+    - "{{ granted_domains }}"
+
+- name:  Symlink HAVP binary
+  file:
+    src: "{{ v_havp_root_directory }}/havp/sbin/havp"
+    dest: "{{ v_havp_root_directory }}/{{ item.domain }}/sbin/havp.{{ item.domain }}"
+    owner: root
+    group: root
+    state: link
+  with_items: 
+    - "{{ granted_domains }}"
+
+- name:  Symlink HAVP template
+  file:
+    src: "{{ v_havp_root_directory }}/havp/etc/havp/templates"
+    dest: "{{ v_havp_root_directory }}/{{ item.domain }}/etc/templates"
+    owner: root
+    group: root
+    state: link
+  with_items: 
+    - "{{ granted_domains }}"
+
+# HAVP Configuration for each domain
+- name:  Install HAVP config file for each domain
+  template:
+    src: "havp.config.j2"
+    dest: "{{ v_havp_root_directory }}/{{ item.domain }}/etc/havp.config"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Restart havp daemon
+  register: granted_havp_domains_changed
+
+- name:  Install HAVP blacklist file for each domain
+  template:
+    src: "havp.blacklist.j2"
+    dest: "/opt/havp/{{ item.domain }}/etc/blacklist"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Restart havp daemon
+  register: granted_havp_domains_changed
+
+- name:  Install HAVP whitelist file for each domain
+  template:
+    src: "havp.whitelist.j2"
+    dest: "/opt/havp/{{ item.domain }}/etc/whitelist"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Restart havp daemon
+  register: granted_havp_domains_changed
+
+- name:  Install HAVP service file for each domain
+  template:
+    src: "havp.service.j2"
+    dest: "/etc/systemd/system/havp.{{ item.domain }}.service"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Restart havp daemon
+  register: granted_havp_domains_changed
+
+- name: remember which HAVP daemons need to restart
+  set_fact:
+    restart_havp_daemons: "{{ restart_havp_daemons | default([]) + [item.item.domain] }}"
+  when: item.changed
+  with_items: "{{ granted_havp_domains_changed.results }}"

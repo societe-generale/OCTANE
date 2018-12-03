@@ -1,0 +1,24 @@
+---
+
+- name:  Add domain configuration files to nginx directory
+  template:
+    src: "nginx_vhost.j2"
+    dest: "/etc/nginx/conf.d/{{item.domain}}.conf"
+    owner: root
+    force: yes
+    group: root
+    mode: 0644
+    backup: yes
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Reload nginx daemon
+
+- name:  Create log nginx directories for each domain
+  file:
+      path: "{{ v_log_path }}/nginx/{{ item.domain }}/"
+      state: directory
+      mode: 0755
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Reload nginx daemon
+

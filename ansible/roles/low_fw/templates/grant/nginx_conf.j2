@@ -1,0 +1,34 @@
+# Ansible configuration
+
+user nginx;
+worker_processes auto;
+error_log {{ v_log_path }}/nginx/error.log;
+pid /var/run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+stream {
+    log_format proxy '$remote_addr [$time_local] '
+                     '$protocol $status $bytes_sent $bytes_received '
+                     '$session_time "$upstream_addr" '
+                     '"$upstream_bytes_sent" "$upstream_bytes_received" "$upstream_connect_time"';
+
+{% for domain in granted_domains %}
+    server {
+{% if domain.backend_protocol  == "http" %}
+        listen {{ domain.http_listening_port }};
+{% endif %}
+{% if domain.backend_protocol  == "https" %}
+        listen {{ domain.https_listening_port }};
+{% endif %}
+        proxy_pass {{ domain.backend_ip_or_fqdn }}:{{ domain.backend_port }};
+        access_log {{ v_log_path }}/nginx/{{ domain.domain }}/{{ domain.domain }}_{{ domain.backend_protocol }}_access.log proxy;
+    }
+
+{% endfor %}
+}

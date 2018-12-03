@@ -1,0 +1,22 @@
+---
+
+- name: Add special path onto fstab
+  lineinfile:
+    path: "/etc/fstab"
+    line: "tmpfs {{ v_clamd_temporary_directory }} tmpfs size=128M,mand 0 0"
+
+- name: Mount tmp HAVP directory
+  command: mount -o gid=clamscan,uid=clamscan "{{ v_clamd_temporary_directory }}"
+  args:
+    warn: no
+  become: true
+
+- name: Create second loopback, needed for SURICATA
+  copy:
+    src: "ifcfg-lo_2"
+    dest: "/etc/sysconfig/network-scripts/ifcfg-lo:2"
+    backup: yes
+    mode: 0644
+
+- name: Enable second loopback
+  shell: ifup "ifcfg-lo:2"

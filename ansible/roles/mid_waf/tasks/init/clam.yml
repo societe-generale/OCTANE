@@ -1,0 +1,29 @@
+---
+
+- name:  Install clam  config file
+  template:
+    src: "clamav.scan.j2"
+    dest: "/etc/clamd.d/scan.conf"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: Restart clamd daemon
+
+- name:  Remove systemctl service file for clamd
+  file:
+   path: /lib/systemd/system/clamd*
+   state: absent
+
+- name:  Install new service file for clamd
+  copy:
+    src: "{{ item }}"
+    dest: "/lib/systemd/system/{{ item}}"
+    owner: root
+    group: root
+    backup: yes
+    mode: 0644
+  with_items: 
+    - clamd.service
+    - clamdscan.service
+  notify: Restart clamd daemon

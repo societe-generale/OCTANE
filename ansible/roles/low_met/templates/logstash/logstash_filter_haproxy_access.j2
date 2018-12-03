@@ -1,0 +1,29 @@
+# Haproxy configuration
+  if [fields][log_type] == "haproxy_access" {
+     grok {
+          match => [ "message" , "%{SYSLOGTIMESTAMP:syslog_timestamp} %{IPORHOST:syslog_server} %{SYSLOGPROG}: %{IP:client_ip}:%{INT:client_port} \[%{HAPROXYDATE:accept_date}\] %{NOTSPACE:frontend_name} %{NOTSPACE:backend_name}/%{NOTSPACE:server_name} %{INT:time_queue}/%{INT:time_backend_connect}/%{NOTSPACE:time_duration} %{NOTSPACE:bytes_read} %{NOTSPACE:termination_state} %{INT:actconn}/%{INT:feconn}/%{INT:beconn}/%{INT:srvconn}/%{NOTSPACE:retries} %{INT:srv_queue}/%{INT:backend_queue}" ]
+           add_field => [ "az", "%{[fields][az]}" ]
+           add_field => [ "ciap", "%{[fields][ciap]}" ]
+           add_field => [ "bl", "%{[fields][bl]}" ]
+           add_field => [ "env", "%{[fields][env]}" ]
+           add_field => [ "fonction", "%{[fields][fonction]}" ]
+           add_field => [ "region", "%{[fields][region]}" ]
+           add_field => [ "stage", "%{[fields][stage]}" ]
+           add_field => [ "hostname", "%{[fields][hostname]}" ]
+           add_field => [ "genre", "%{[fields][genre]}" ]
+     }
+     mutate {
+       copy => { "[backend_name]" => "database" }
+     }
+
+     mutate {
+       gsub => [ "database", "\.", "_" ]
+     }
+
+     date {
+          match => [ "accept_date" , "dd/MMM/YYYY:HH:mm:ss.SSS" ]
+          target => "@timestamp"
+          timezone => "Europe/Paris"
+          locale => "en"
+     }
+  }

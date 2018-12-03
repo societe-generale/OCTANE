@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+- name: "{{ item.name | default('cIAP') }}-{{ item.id | default('1') }}"
+  orgId: {{ item.id | default('1') }}
+  folder: ""
+  type: file
+  disableDeletion: false
+  editable: false
+  updateIntervalSeconds: 60 
+  options:
+    path: "/etc/grafana/provisioning/dashboards/{{ item.name }}-{{ item.id }}"
+    provisioning: "/etc/grafana/provisioning"

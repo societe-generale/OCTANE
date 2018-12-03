@@ -1,0 +1,14 @@
+---
+
+- name:  Add domain configuration files to haproxy directory
+  template:
+    src: "haproxy.j2"
+    dest: "/etc/haproxy/haproxy.cfg"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+  with_items: 
+    - "{{ granted_domains }}"
+  notify: Reload haproxy daemon

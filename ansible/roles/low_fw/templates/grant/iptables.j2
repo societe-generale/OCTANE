@@ -1,0 +1,17 @@
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [214:43782]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -p tcp -m tcp -m state --state NEW --dport 22 -j ACCEPT
+-A INPUT -p tcp -m tcp -m state --state NEW --dport {{ v_healthcheck_port }} -m comment --comment "Healthcheck" -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+{% for domain in granted_domains %}
+-A INPUT -p tcp -m tcp --dport {{ domain.http_listening_port }} -j LOG -m state --state new --log-prefix "IN {{ domain.domain}}:{{ domain.http_listening_port }}"
+-A INPUT -p tcp -m tcp --dport {{ domain.https_listening_port }} -j LOG -m state --state new --log-prefix "IN {{ domain.domain}}:{{ domain.https_listening_port }}"
+-A INPUT -p tcp -m tcp --dport {{ domain.http_listening_port }} -m state --state new -m comment --comment "IN {{ domain.domain}}:{{ domain.http_listening_port }}" -j ACCEPT
+-A INPUT -p tcp -m tcp --dport {{ domain.https_listening_port }} -m state --state new -m comment --comment "IN {{ domain.domain}}:{{ domain.https_listening_port }}" -j ACCEPT
+{% endfor %}
+-A INPUT -j DROP
+COMMIT

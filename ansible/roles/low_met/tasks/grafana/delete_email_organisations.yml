@@ -1,0 +1,48 @@
+---
+
+- name: grafana Retrieve emails organisation's ids (bad ones)
+  uri:
+    url: "https://localhost:3000/api/orgs/name/{{ item.item.email }}"
+    method: GET
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    timeout: 5
+    validate_certs: no
+  when: not(
+          (new_orgs_grafana is undefined)
+          or
+          (new_orgs_grafana | length > 0)
+          or
+          (new_orgs_grafana is none)
+          or
+          (new_orgs_grafana | trim == '')
+        )
+  with_items:
+    - "{{ new_orgs_grafana }}"
+  register: emails_orgs_grafana
+
+- name: grafana Delete email organisation
+  uri:
+    url: "https://localhost:3000/api/orgs/{{ item.json.id }}"
+    method: DELETE
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    force_basic_auth: yes
+    status_code: 200,404
+    return_content: yes
+    timeout: 5
+    validate_certs: no
+  when: not(
+          (emails_orgs_grafana.results is undefined)
+          or
+          (emails_orgs_grafana.results | length > 0)
+          or
+          (emails_orgs_grafana is none)
+          or
+          (emails_orgs_grafana | trim == '')
+        )
+  with_items:
+    - "{{ emails_orgs_grafana.results }}"

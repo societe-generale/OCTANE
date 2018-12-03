@@ -1,0 +1,46 @@
+---
+
+- name: Check purpose
+  package:
+   name: "{{ item }}"
+   state: present
+  with_items:
+    - httpd
+
+- name:  Install metrology softwares
+  package:
+   name: "{{ item }}"
+   state: present
+  with_items:
+    - logstash
+    - grafana
+    - influxdb
+    - java-1.8.0-openjdk
+
+- name:  Install other softwares
+  package:
+   name: "{{ item }}"
+   state: present
+  with_items:
+    - unzip
+
+- name: Enable influxdb systemd service
+  systemd:
+     name: "influxdb"
+     daemon_reload: yes
+     enabled: yes
+     state: restarted
+
+- name: Enable Logstash systemd service
+  systemd:
+     name: logstash
+     daemon_reload: yes
+     enabled: yes
+     state: restarted
+
+- name: Enable and restart grafana systemd service
+  systemd:
+     name: "grafana-server"
+     daemon_reload: yes
+     enabled: yes
+     state: restarted

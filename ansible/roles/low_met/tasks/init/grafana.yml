@@ -1,0 +1,10 @@
+---
+
+- import_tasks: ../grafana/retrieve_certificate.yml
+
+- import_tasks: grafana/grafana_ini.yml
+
+- import_tasks: grafana/deploy_plugins.yml
+
+- import_tasks: grafana/admin_password.yml
+

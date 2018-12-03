@@ -1,0 +1,12 @@
+---
+
+- name:  Add Iptables configuration file to rsyslog directory
+  template:
+    src: "init/rsyslog_iptables.j2"
+    dest: "/etc/rsyslog.d/iptables.conf"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+  notify: Reload rsyslog daemon

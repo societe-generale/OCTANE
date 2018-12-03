@@ -1,0 +1,9 @@
+---
+
+- name: Retrieve content of {{ v_certificates_path }}/grafana.crt
+  command: "cat {{ v_certificates_path }}/grafana.crt"
+  register: grafana_crt
+
+- name: Retrieve content of {{ v_certificates_path }}/grafana.key
+  command: "cat {{ v_certificates_path }}/grafana.key"
+  register: grafana_key

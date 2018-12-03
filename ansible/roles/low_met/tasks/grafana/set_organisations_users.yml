@@ -1,0 +1,25 @@
+---
+
+- name: Add grafana accountable user to its domain organisation
+  uri:
+    url: "https://localhost:3000/api/orgs/{{ item.json.orgId }}/users"
+    method: POST
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    body: "{ \"LoginOrEmail\": \"{{ item.item.email }}\", \"role\": \"Admin\" }"
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+    timeout: 5
+    validate_certs: no
+  when: not(
+          (new_orgs_grafana is undefined)
+          or
+          (new_orgs_grafana | length > 0)
+          or
+          (new_orgs_grafana is none)
+          or
+          (new_orgs_grafana | trim == '')
+        )
+  with_items:
+    - "{{ new_orgs_grafana }}"

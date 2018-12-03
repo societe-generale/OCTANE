@@ -1,0 +1,12 @@
+---
+
+- name: Grant specific sudo for telegraf on "{{ ec2_stage }}"_"{{ ec2_fonction }}"
+  template:
+    src: "grant/telegraf_sudoers.j2"
+    dest: "/etc/sudoers.d/telegraf_{{ item.domain }}"
+    owner: root
+    backup: no
+    force: yes
+    group: root
+    mode: 0440
+  with_items: "{{ granted_domains }}"

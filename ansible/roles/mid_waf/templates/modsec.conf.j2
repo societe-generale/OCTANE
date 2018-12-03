@@ -1,0 +1,7 @@
+# Include the recommended configuration
+Include /etc/nginx/modsecurity.conf
+
+Include /etc/nginx/crs-setup.conf
+Include /etc/nginx/rules/*.conf
+# A test rule
+SecRule ARGS:testparam "@contains test" "id:1234,deny,log,status:403"

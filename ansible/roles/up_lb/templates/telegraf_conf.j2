@@ -1,0 +1,59 @@
+# Telegraf configuration
+[global_tags]
+  az = "{{ ec2_availabilityzone }}"
+  ciap = "{{ ec2_aws_cloudformation_stack_name }}"
+  bl = "{{ ec2_bl }}"
+  env = "{{ ec2_env }}"
+  fonction = "{{ ec2_fonction }}"
+  region = "{{ ec2_region }}"
+  stage = "{{ ec2_stage }}"
+
+[agent]
+  interval = "60s"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "5s"
+  flush_interval = "60s"
+  flush_jitter = "0s"
+  precision = "s"
+  debug = false
+  quiet = true
+  logfile = "{{ v_log_path }}/telegraf/telegraf.log"
+  hostname = "{{ ec2_name }}"
+  omit_hostname = false
+
+[[outputs.http]]
+  url = "https://{{ ec2_low_met_private_dns_names }}:{{ v_metrology_influxdb_port }}"
+  timeout = "5s"
+  tls_cert = "{{ v_certificates_path}}/telegraf.crt"
+  tls_key = "{{ v_certificates_path}}/telegraf.key"
+  insecure_skip_verify = true
+  data_format = "json"
+  [outputs.http.headers]
+    Content-Type = "application/json; charset=utf-8"
+
+[[inputs.haproxy]]
+  servers = ["http://{{ v_haproxy_stats_listening_ip }}:{{ v_haproxy_stats_listening_port }}/{{ v_haproxy_stats_uri }}"]
+
+{% for item in granted_domains %}
+{% if item.http| bool -%}
+[[inputs.net_response]]
+  protocol = "tcp"
+  address = "{{ clb_up_mid_dns_name }}:{{ item.http_listening_port }}"
+  timeout = "2s"
+  [inputs.net_response.tags]
+      domain = "{{ item.domain }}"
+      component = "elb"
+
+{%- endif %}
+[[inputs.net_response]]
+  protocol = "tcp"
+  address = "{{ clb_up_mid_dns_name }}:{{ item.https_listening_port }}"
+  timeout = "2s"
+  [inputs.net_response.tags]
+      domain = "{{ item.domain }}"
+      component = "elb"
+
+{% endfor %}
+

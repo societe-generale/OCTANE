@@ -1,0 +1,90 @@
+---
+
+- name: Retrieve informations about revoked domains
+  uri:
+    url: "https://localhost:3000/api/orgs/name/{{ item.domain }}"
+    method: GET
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    force_basic_auth: yes
+    status_code: 200,404
+    return_content: yes
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ revoked_domains }}"
+  register: tmp_revoked_orgs_grafana
+
+- name: Set truely revoked domains
+  set_fact:
+    revoked_orgs_grafana: "{{ revoked_orgs_grafana | default([]) + [item] }}"
+  with_items: "{{ tmp_revoked_orgs_grafana.results }}"
+  when: item.status == 200
+
+- name: Retrieve users in revoked domains
+  uri:
+    url: "https://localhost:3000/api/orgs/{{ item.json.id }}/users"
+    method: GET
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ revoked_orgs_grafana }}"
+  when: 
+    - revoked_orgs_grafana is defined
+  register: revoked_users_orgs_grafana
+
+- name: Remove users from organisation/domains
+  uri:
+    url: "https://localhost:3000/api/orgs/{{ item.orgId }}/users/{{ item.userId }}"
+    method: GET
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    force_basic_auth: yes
+    status_code: 200,404
+    return_content: no
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ revoked_users_orgs_grafana.results[0].json }}"
+  when: 
+    - revoked_users_orgs_grafana.results[0].json is defined
+    - item.login != "admin"
+
+- name: Retrieve org for each user
+  uri:
+    url: "https://localhost:3000/api/users/{{ item.userId }}/orgs"
+    method: GET
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    force_basic_auth: yes
+    status_code: 200,404
+    return_content: no
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ revoked_users_orgs_grafana.results[0].json }}"
+  when: 
+    - revoked_users_orgs_grafana.results[0].json is defined
+    - item.login != "admin"
+  register: test_orgs
+
+- name: Delete revoked organisation/domains
+  uri:
+    url: "https://localhost:3000/api/orgs/{{ item.json.id }}"
+    method: DELETE
+    user: admin
+    password: "{{ v_grafana_admin_password }}"
+    force_basic_auth: yes
+    status_code: 200,404
+    return_content: no
+    timeout: 5
+    validate_certs: no
+  with_items:
+    - "{{ revoked_orgs_grafana }}"
+  when: 
+    - revoked_orgs_grafana is defined

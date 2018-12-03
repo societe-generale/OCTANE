@@ -1,0 +1,90 @@
+---
+
+- name:  Install nginx softwares
+  package:
+   name: "{{ item }}"
+   state: present
+  with_items:
+    - nginx
+    - nginx-all-modules
+    - nginx-mod-stream
+    - mod_security
+    - mod_security_crs
+
+- name:  Install antivirus softwares
+  package:
+   name: "{{ item }}"
+   state: present
+  with_items:
+    - clamav
+    - clamav-data
+    - clamav-filesystem
+    - clamav-scanner
+    - clamav-server
+    - clamav-server-systemd
+    - clamav-update
+
+- name:  Create HAVP directory
+  file:
+      path: "{{ v_havp_root_directory }}"
+      state: directory
+      mode: 0755
+
+- name:  Create SURICATA directory
+  file:
+      path: "{{ v_suricata_root_directory }}"
+      state: directory
+      mode: 0755
+
+- name:  Install HAVP from archive
+  unarchive:
+    src: havp.tar.gz
+    dest: "{{ v_havp_root_directory }}"
+    copy: yes
+
+- name:  Install SURICATA from archive
+  unarchive:
+    src: suricata.tar.gz
+    dest: "{{ v_suricata_root_directory }}"
+    copy: yes
+
+- name:  Install SURICATA binary compiled with NFQUEUE
+  copy:
+    src: suricata
+    dest: "{{ v_suricata_root_directory }}/suricata/bin/"
+    backup: yes
+    mode: 0755
+
+- name:  Install SURICATA libraries from archive
+  unarchive:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    copy: yes
+  with_items:
+    - { src: "suricata.lib.tar.gz", dest: "/usr/lib64/" }
+
+- name:  Install nginx binary compiled with mod_security
+  copy:
+    src: nginx
+    dest: "/sbin/"
+    backup: yes
+    mode: 0755
+
+- name:  Create configuration nginx directory
+  file:
+      path: "/etc/nginx/conf.d"
+      state: directory
+      mode: 0755
+      recurse: yes
+
+- name:  Add configuration files to nginx directory
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items:
+    - { src: "nginx.j2", dest: "/etc/nginx/nginx.conf" }
+    - { src: "nginx.service.j2", dest: "/usr/lib/systemd/system/nginx.service" }

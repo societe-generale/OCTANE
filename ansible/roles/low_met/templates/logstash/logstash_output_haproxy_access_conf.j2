@@ -1,0 +1,59 @@
+output {
+  if [database] == "{{ item[0].domain | replace('.', '_') }}" {
+    if [fields][log_type] == "haproxy_access" {
+      influxdb {
+        host => "{{ v_metrology_influxdb_host }}"
+        user => "{{ v_metrology_influxdb_user }}"
+        password => "{{ v_metrology_influxdb_password }}"
+        port => {{ v_metrology_influxdb_port }}
+        data_points => {
+          "frontend_name" => "%{[frontend_name]}"
+          "backend_name" => "%{[backend_name]}"
+          "server_name" => "%{[server_name]}"
+          "time_queue" => "%{[time_queue]}"
+          "time_backend-connect" => "%{[time_backend_connect]}"
+          "time_duration" => "%{[time_duration]}"
+          "bytes_read" => "%{[bytes_read]}"
+          "termination_state" => "%{[termination_state]}"
+          "accept_date" => "%{[accept_date]}"
+          "actconn" => "%{[actconn]}"
+          "feconn" => "%{[feconn]}"
+          "beconn" => "%{[beconn]}"
+          "srvconn" => "%{[srvconn]}"
+          "retries" => "%{[retries]}"
+          "srv_queue" => "%{[srv_queue]}"
+          "backend_queue" => "%{[backend_queue]}"
+          "az" => "%{[az]}"
+          "ciap" => "%{[ciap]}"
+          "bl" => "%{[bl]}"
+          "env" => "%{[env]}"
+          "fonction" => "%{[fonction]}"
+          "region" => "%{[region]}"
+          "stage" => "%{[stage]}"
+          "hostname" => "%{[hostname]}"
+          "genre" => "%{[genre]}"
+        }
+        coerce_values => {
+          "time_queue" => "integer"
+          "time_backend_connect" => "integer"
+          "time_duration" => "integer"
+          "bytes_read" => "integer"
+          "actconn" => "integer"
+          "feconn" => "integer"
+          "beconn" => "integer"
+          "srvconn" => "integer"
+          "retries" => "integer"
+          "srv_queue" => "integer"
+          "backend_queue" => "integer"
+        }
+        measurement => "haproxy_access"
+        use_event_fields_for_data_points => false
+        allow_time_override => true
+        time_precision => "ms"
+        send_as_tags => [ "frontend_name", "backend_name", "server_name", "az", "ciap", "env", "fonction", "region", "stage", "genre", "http_response" ]
+        db => "{{ item[0].domain | replace('.', '_') }}"
+        ssl => true
+      }
+    }
+  }
+}

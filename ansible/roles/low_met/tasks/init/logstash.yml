@@ -1,0 +1,59 @@
+---
+
+- name:  Install main logstash configuration file
+  template:
+    src: "logstash/logstash_conf.j2"
+    dest: "/etc/logstash/logstash.yml"
+    owner: root
+    backup: yes
+    group: root
+    mode: 0644
+  notify: Enable Logstash systemd service
+
+- name:  Install logstash service
+  copy:
+    src: "logstash/logstash_service"
+    dest: "/etc/systemd/system/logstash.service"
+    owner: root
+    backup: yes
+    group: root
+    mode: 0644
+  notify: Enable Logstash systemd service
+
+- name: Create logstash input and filter directory
+  file:
+    path: "/etc/logstash/conf.d/{{ item }}"
+    state: directory
+    owner: root
+    group: logstash
+    mode: 0775
+  with_items: 
+    - "input"
+    - "filter"
+  notify: Enable Logstash systemd service
+
+- name: Populate input and filter logstash configuration
+  template:
+    src: "logstash/logstash_all_{{ item }}_conf.j2"
+    dest: "/etc/logstash/conf.d/{{ item }}/{{ item }}.conf"
+    owner: root
+    backup: yes
+    group: logstash
+    mode: 0640
+  with_items:
+    - "input"
+    - "filter"
+  notify: Enable Logstash systemd service
+
+- name: Add proxy configuration for system
+  lineinfile:
+    dest: "/etc/environment"
+    line : "{{ item }}"
+  with_items:
+    - "export HTTP_PROXY={{ v_http_proxy }}"
+    - "export HTTPS_PROXY={{ v_https_proxy }}"
+    - "export no_proxy=169.254.169.254,localhost,127.0.0.1"
+
+- name: Install influxdb plugin
+  command: /usr/share/logstash/bin/logstash-plugin install logstash-output-influxdb
+  notify: Enable Logstash systemd service

@@ -1,0 +1,77 @@
+---
+
+- name: Add granted domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "granted_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - low_fw
+    - init
+    - grantdomain
+
+- name: Add revoked domains
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "revoked_domains_{{stack}}.yml"
+      skip: true
+  tags:
+    - low_fw
+    - revokedomain
+
+- import_tasks: init/softwares.yml
+  tags:
+    - init
+    - low_fw
+
+- import_tasks: init/selinux.yml
+  tags:
+    - init
+    - low_fw
+
+- import_tasks: grant/sudoers.yml
+  tags:
+    - init
+    - grantdomain
+    - low_fw
+
+- import_tasks: grant/nginx_directories.yml
+  tags:
+    - init
+    - grantdomain
+    - low_fw
+
+- import_tasks: grant/iptables.yml
+  tags:
+    - init
+    - grantdomain
+    - revokedomain
+    - low_fw
+
+- import_tasks: grant/nginx.yml
+  tags:
+    - init
+    - revokedomain
+    - grantdomain
+    - low_fw
+
+- import_tasks: grant/filebeat.yml
+  tags:
+    - init
+    - revokedomain
+    - grantdomain
+    - low_fw
+
+- import_tasks: grant/telegraf.yml
+  tags:
+    - init
+    - revokedomain
+    - grantdomain
+    - low_fw
+
+- import_tasks: revoke/sudoers.yml
+  tags:
+    - revokedomain
+    - low_fw

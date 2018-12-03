@@ -1,0 +1,22 @@
+# Uncomment this option to enable logging.
+#LogFile {{ v_log_path }}/clam/clamd.scan
+#LogFileMaxSize 2M
+#LogTime yes
+#LogClean no
+#LogVerbose no
+#LogRotate yes
+#ExtendedDetectionInfo yes
+PidFile {{ v_clamd_temporary_directory }}/clamd.pid
+TemporaryDirectory {{ v_clamd_temporary_directory }}
+DatabaseDirectory /var/lib/clamav
+TCPSocket {{ v_clamd_listening_port }}
+TCPAddr {{ v_clamd_listening_address }}
+ReadTimeout 5
+ExcludePath ^/proc/
+ExcludePath ^/sys/
+SelfCheck 3600
+LeaveTemporaryFiles no
+ForceToDisk no
+DisableCache no
+Foreground yes
+User clamscan

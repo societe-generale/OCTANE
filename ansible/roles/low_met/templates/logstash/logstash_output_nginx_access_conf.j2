@@ -1,0 +1,49 @@
+output {
+  if [database] == "{{ item[0].domain | replace('.', '_') }}" {
+    if [fields][log_type] == "nginx_access" {
+       influxdb {
+          host => "{{ v_metrology_influxdb_host }}"
+          user => "{{ v_metrology_influxdb_user }}"
+          password => "{{ v_metrology_influxdb_password }}"
+          port => {{ v_metrology_influxdb_port }}
+          data_points => {
+                "clientip" => "%{[clientip]}"
+                "user_name" => "%{[user_name]}"
+                "method" => "%{[method]}"
+                "url" => "%{[url]}"
+                "http_version" => "%{[http_version]}"
+                "http_response" => "%{[http_response]}"
+                "body_sent_bytes" => "%{[body_sent_bytes]}"
+                "referrer" => "%{[referrer]}"
+                "agent" => "%{[agent]}"
+                "x_forwarded_for" => "%{[x_forwarded_for]}"
+                "domain" => "%{[domain]}"
+                "listening_port" => "%{[listening_port]}"
+                "proxy_port" => "%{[proxy_port]}"
+                "az" => "%{[az]}"
+                "ciap" => "%{[ciap]}"
+                "bl" => "%{[bl]}"
+                "env" => "%{[env]}"
+                "fonction" => "%{[fonction]}"
+                "region" => "%{[region]}"
+                "stage" => "%{[stage]}"
+                "hostname" => "%{[hostname]}"
+                "genre" => "%{[genre]}"
+          }
+          coerce_values => {
+                "body_sent_bytes" => "integer"
+                "http_response" => "integer"
+                "listening_port" => "integer"
+                "proxy_port" => "integer"
+          }
+          measurement => "nginx_access"
+          use_event_fields_for_data_points => false
+          allow_time_override => true
+          time_precision => "ms"
+          send_as_tags => [ "domain", "clientip", "method", "http_version", "listening_port", "proxy_port", "az", "ciap", "env", "fonction", "region", "stage", "genre", "http_response" ]
+          db => "{{ item[0].domain | replace('.', '_') }}"
+          ssl => true
+       }
+    }
+  }
+}

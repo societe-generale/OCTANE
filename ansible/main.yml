@@ -1,0 +1,43 @@
+---
+
+- name: Apply common configuration to "{{ stack }}"
+  hosts: "{{ stack }}"
+  become: yes
+  gather_facts: yes
+  roles:
+    - "common"
+
+- name: cIAP "{{ stack }}" setup for "up_lb"
+  hosts: "{{ stack }}:&up:&lb"
+  become: yes
+  gather_facts: yes
+  roles:
+    - "up_lb"
+
+- name: cIAP "{{ stack }}" setup for "mid_waf"
+  hosts: "{{ stack }}:&mid:&waf"
+  become: yes
+  gather_facts: yes
+  roles:
+    - "mid_waf"
+
+- name: cIAP "{{ stack }}" setup for "mid_vpn"
+  hosts: "{{ stack }}:&mid:&vpn"
+  become: yes
+  gather_facts: yes
+  roles:
+    - "mid_vpn"
+
+- name: cIAP "{{ stack }}" setup for "low_fw"
+  hosts: "{{ stack }}:&low:&fw"
+  become: yes
+  gather_facts: yes
+  roles:
+    - "low_fw"
+
+- name: cIAP "{{ stack }}" setup for "low_met"
+  hosts: "{{ stack }}:&low:&met"
+  become: yes
+  gather_facts: yes
+  roles:
+    - "low_met"

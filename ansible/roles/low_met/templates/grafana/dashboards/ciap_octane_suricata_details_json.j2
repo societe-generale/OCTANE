@@ -1,0 +1,501 @@
+{
+  "__inputs": [
+    {
+      "name": "cIAP",
+      "label": "cIAP",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    },
+    {
+      "name": "VAR_UID",
+      "type": "constant",
+      "label": "uid",
+      "value": "1016849514518892",
+      "description": ""
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "5.1.4"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": "5.0.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1533721625351,
+  "links": [],
+  "panels": [
+    {
+      "columns": [],
+      "datasource": "cIAP",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 32,
+        "w": 15,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "links": [],
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 1,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "hidden"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 0,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "none"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "$col",
+          "groupBy": [],
+          "hide": true,
+          "measurement": "suricata_alert",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "alert_action"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Action"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alert_category"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Category"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alert_gid"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "GID"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alert_rev"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Rev"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alert_severity"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Severity"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alert_signature"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Signature"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "alert_signature-id"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Signature ID"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "flow_bytes_toclient"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Flow bytes to client"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "flow_bytes_toserver"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Flow bytes to server"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "flow_pkts_toclient"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Flow packets  to client"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "flow_pkts_toserver"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Flow packets  to server"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "http_protocol"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HTTP protocol"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "http_url"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HTTP URL"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "http_xff"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HTTP XFF"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "http_length"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HTTP length"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "proto"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Protocol"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "src_ip"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Source IP"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "flow_id",
+              "operator": "=~",
+              "value": "/^$uid$/"
+            }
+          ]
+        },
+        {
+          "alias": "$col ($measurement)",
+          "groupBy": [],
+          "measurement": "suricata_alert",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "flow_id",
+              "operator": "=~",
+              "value": "/^$uid$/"
+            }
+          ]
+        },
+        {
+          "alias": "$col ($measurement)",
+          "groupBy": [],
+          "measurement": "suricata_fileinfo",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "flow_id",
+              "operator": "=~",
+              "value": "/^$uid$/"
+            }
+          ]
+        },
+        {
+          "alias": "$col ($measurement)",
+          "groupBy": [],
+          "measurement": "suricata_http",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "flow_id",
+              "operator": "=~",
+              "value": "/^$uid$/"
+            }
+          ]
+        }
+      ],
+      "title": "Event",
+      "transform": "timeseries_to_rows",
+      "transparent": true,
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 16,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "value": "${VAR_UID}",
+          "text": "${VAR_UID}"
+        },
+        "hide": 2,
+        "label": null,
+        "name": "uid",
+        "options": [
+          {
+            "value": "${VAR_UID}",
+            "text": "${VAR_UID}"
+          }
+        ],
+        "query": "${VAR_UID}",
+        "type": "constant"
+      }
+    ]
+  },
+  "time": {
+    "from": "now/M",
+    "to": "now/M"
+  },
+  "timepicker": {
+    "hidden": true,
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "IDS_Detail",
+  "uid": null,
+  "version": 22
+}

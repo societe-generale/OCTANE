@@ -1,0 +1,55 @@
+# Influx conf file
+reporting-disabled = true
+bind-address = "127.0.0.1:8088"
+
+[meta]
+  dir = "/var/lib/influxdb/meta"
+  logging-enabled = false
+
+[data]
+  dir = "/var/lib/influxdb/data"
+  wal-dir = "/var/lib/influxdb/wal"
+  query-log-enabled = false
+
+[coordinator]
+
+[retention]
+
+[shard-precreation]
+
+[monitor]
+  store-enabled = false
+
+[http]
+  enabled = true
+  bind-address = "127.0.0.1:8086"
+  auth-enabled = false
+  log-enabled = false
+  https-enabled = true
+  https-certificate = "{{ v_certificates_path}}/influxdb.crt"
+  https-private-key = "{{ v_certificates_path}}/influxdb.key"
+
+[ifql]
+  enabled = false
+
+[logging]
+  format = "auto"
+  level = "error"
+  suppress-logo = true
+
+[subscriber]
+
+[[graphite]]
+  enabled = false
+
+[[collectd]]
+  enabled = false
+
+[[opentsdb]]
+  enabled = false
+
+[[udp]]
+  enabled = false
+
+[continuous_queries]
+  enabled = false

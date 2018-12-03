@@ -1,0 +1,17 @@
+---
+
+- name: Create plugin directory
+  file:
+      path: "/var/lib/grafana/plugins"
+      state: directory
+      group: grafana
+      mode: 0755
+
+- name: Deploy grafana plugins
+  unarchive:
+    src: "grafana/{{ item }}"
+    dest: /var/lib/grafana/plugins
+  with_items:
+    - jdbranham-grafana-diagram-4406897.zip
+    - NatelEnergy-grafana-discrete-panel-0.0.7-24-g5e8e975.zip
+

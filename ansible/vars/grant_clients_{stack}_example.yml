@@ -1,0 +1,6 @@
+openvpn_grant_these_clients:
+  - name: "riri"
+    ip: 7
+    email: "riri@mail.com"
+    client_network: "10.10.100.77"
+    client_netmask: "255.255.255.255"

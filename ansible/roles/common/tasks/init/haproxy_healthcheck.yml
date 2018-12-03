@@ -1,0 +1,24 @@
+---
+
+- name:  Add healtcheck answer configuration file to haproxy directory
+  copy:
+    src: "haproxy_healthcheck_all_all_200_http_ok"
+    dest: "/etc/haproxy/200_http_ok"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+  notify: Start haproxy daemon
+
+- name:  Add configuration file to haproxy directory
+  template:
+    src: "haproxy_all_all.j2"
+    dest: "/etc/haproxy/haproxy.cfg"
+    owner: root
+    backup: yes
+    force: yes
+    group: root
+    mode: 0644
+  notify: Start haproxy daemon
+
