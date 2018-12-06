@@ -65,18 +65,6 @@ Parameters:
       - TMP
     Default: TMP
     Type: String
-  S3Key:
-    Description: The name of the ZIP package
-    Type: String
-    Default: Lambda/amilookup.zip
-  ModuleName:
-    Description: The name of the JavaScript file
-    Type: String
-    Default: amilookup
-  S3Bucket:
-    Description: The name of the bucket that contains your packaged source
-    Type: String
-    Default: ciap-octane
   AZ1:
     Description: AZ 1
     Type: String
@@ -105,6 +93,9 @@ Parameters:
     Description: MIDVPN instance type
     Type: String
     Default: t2.nano
+  ImageId: 
+    Description: AMI used for EC2 instances
+    Default: "imageid"
 
 Resources:
   VPC:
@@ -766,9 +757,7 @@ Resources:
     Metadata:
       Comment: Install a hosting LB server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGUP
@@ -808,9 +797,7 @@ Resources:
     Metadata:
       Comment: Install a hosting LB server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGUP
@@ -850,9 +837,7 @@ Resources:
     Metadata:
       Comment: Install a hosting WAF server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGMID
@@ -892,9 +877,7 @@ Resources:
     Metadata:
       Comment: Install a hosting WAF server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGMID
@@ -934,9 +917,7 @@ Resources:
     Metadata:
       Comment: Install a hosting FW server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGLOW
@@ -976,9 +957,7 @@ Resources:
     Metadata:
       Comment: Install a hosting FW server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGLOW
@@ -1018,9 +997,7 @@ Resources:
     Metadata:
       Comment: Install a hosting metrology server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGMET
@@ -1061,9 +1038,7 @@ Resources:
     Metadata:
       Comment: Install a hosting VPN server
     Properties:
-      ImageId: !GetAtt
-        - AMIInfo
-        - Id
+      ImageId: !Ref ImageId
       SecurityGroupIds:
         - !Ref SGADM
         - !Ref SGVPN
@@ -1613,29 +1588,3 @@ Resources:
               - CLBMIDLOWAZ1
               - DNSName
             - .
-
-  AMIInfo:
-    Type: 'Custom::AMIInfo'
-    Properties:
-      ServiceToken: !GetAtt
-        - AMIInfoFunction
-        - Arn
-      Region: !Ref 'AWS::Region'
-      OSType: linux
-  AMIInfoFunction:
-    Type: 'AWS::Lambda::Function'
-    Properties:
-      Code:
-        S3Bucket: !Ref S3Bucket
-        S3Key: !Ref S3Key
-      Handler: !Join
-        - ''
-        - - !Ref ModuleName
-          - .handler
-      Role: !GetAtt
-        - LambdaExecutionRole
-        - Arn
-      Runtime: nodejs6.10
-      Timeout: '10'
-
-  LambdaExecutionRole:

@@ -70,7 +70,7 @@ def instances_get(id=None, states=['running']):
         {
             'Name': 'tag:aws:cloudformation:stack-name',
             'Values': [
-                '*smoke*',
+                '*',
             ]
         },
     ]
@@ -130,8 +130,8 @@ def instances_get(id=None, states=['running']):
             instance_vars[u"ec2_private_ip_address"] = instance_vars[u"ansible_host"] = \
                 instance.private_ip_address
 
-            # Default user name for ansible is cloud-user
-            instance_vars[u"ansible_user"] = u"cloud-user"
+            # Default user name for ansible is ec2-user
+            instance_vars[u"ansible_user"] = u"ec2-user"
 
             # Build groups named after list values
             for g in ["ec2_service", "ec2_stage", "ec2_fonction", "role", "ec2_aws:cloudformation:stack-name"]:

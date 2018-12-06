@@ -3,17 +3,17 @@
 - name:  Change bash prompt behaviour
   lineinfile:
     path: "/etc/skel/.bashrc"
-    line: export PS1="\[\e[32m\][DEV] {{ ec2_stage }} {{ ec2_fonction }} \t \[\e[36m\]\u@\h\[\e[m\] \[\e[32m\]\w \\$\[\e[m\] "
+    line: export PS1="\[\e[32m\][USER] {{ ec2_stage }} {{ ec2_fonction }} \t \[\e[36m\]\u@\h\[\e[m\] \[\e[32m\]\w \\$\[\e[m\] "
 
-- name:  Change bash prompt behaviour for cloud-user
+- name:  Change bash prompt behaviour for {{ v_ec2_user }}
   lineinfile:
-    path: "/home/cloud-user/.bashrc"
-    line: export PS1="\[\e[32m\][DEV] {{ ec2_stage }} {{ ec2_fonction }} \t \[\e[36m\]\u@\h\[\e[m\] \[\e[32m\]\w \\$\[\e[m\] "
+    path: "/home/{{ v_ec2_user }}/.bashrc"
+    line: export PS1="\[\e[32m\][USER] {{ ec2_stage }} {{ ec2_fonction }} \t \[\e[36m\]\u@\h\[\e[m\] \[\e[32m\]\w \\$\[\e[m\] "
 
 - name:  Change bash prompt behaviour for root
   lineinfile:
     path: "/root/.bashrc"
-    line: export PS1="\[\e[31m\]\e[7m[PRD] {{ ec2_stage }} {{ ec2_fonction }}\e[27m \t \[\e[36m\]\u@\h\[\e[m\] \[\e[31m\]\w \\$\[\e[m\] "
+    line: export PS1="\[\e[31m\]\e[7m[ROOT] {{ ec2_stage }} {{ ec2_fonction }}\e[27m \t \[\e[36m\]\u@\h\[\e[m\] \[\e[31m\]\w \\$\[\e[m\] "
 
 - name:  Add motd
   template:
@@ -33,7 +33,7 @@
     mode: 0666 
   with_items:
     - "root"
-    - "home/cloud-user"
+    - "home/{{ v_ec2_user }}"
 
 - name:  Change vim colorscheme
   lineinfile:
@@ -41,4 +41,4 @@
     line: colorscheme desert
   with_items:
     - "root"
-    - "home/cloud-user"
+    - "home/{{ v_ec2_user }}"
