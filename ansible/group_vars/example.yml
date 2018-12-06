@@ -44,3 +44,4 @@ v_vpn_port: 123
 v_log_path: "/var/log"
 v_http_proxy: "http://proxy:proxyport/"
 v_https_proxy: "http://proxy:proxyport/"
+v_ec2_user: "ec2-user"

@@ -36,11 +36,6 @@
     - init
     - low_met
 
-- import_tasks: init/haproxy.yml
-  tags:
-    - init
-    - low_met
-
 - import_tasks: init/selinux.yml
   tags:
     - init

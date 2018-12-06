@@ -229,35 +229,8 @@ You nust customise the parameter section, all resources are based upon it.
 ```
 
 >Environment declaration.  
->If you have several environments, you msut put them here.  
+>If you have several environments, you must put them here.  
 >If you have none, you put one allowed value and set it as default.
-
-```yaml
-  S3Key:
-    Description: The name of the ZIP package
-    Type: String
-    Default: Lambda/amilookup.zip
-```
-
->Nothing to do here
-
-```yaml
-  ModuleName:
-    Description: The name of the JavaScript file
-    Type: String
-    Default: amilookup
-```
-
->Nothing to do here
-
-```yaml
-  S3Bucket:
-    Description: The name of the bucket that contains your packaged source
-    Type: String
-    Default: bucketname
-```
-
-> Name of bucket where to put the amilookup.zip
 
 ```yaml
   AZ1:
@@ -321,6 +294,14 @@ You nust customise the parameter section, all resources are based upon it.
 ```
 
 > Define EC instance type for MIDVPN
+
+> Define AMI id for ec2 instances
+
+```yaml
+  ImageId: 
+    Description: AMI used for EC2 instances
+    Default: "imageid"
+```
 
 ## Dependencies
 
