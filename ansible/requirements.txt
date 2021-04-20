@@ -1,4 +1,4 @@
-ansible==2.7.0
+ansible==2.9.20
 asn1crypto==0.24.0
 awscli==1.16.39
 bcrypt==3.1.4
